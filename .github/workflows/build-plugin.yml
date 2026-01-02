@@ -1,0 +1,34 @@
+name: Build AffilixWP Plugin ZIP
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set version variable
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Prepare build directory
+        run: |
+          mkdir build
+          cp -R plugin/affilixwp build/affilixwp
+
+      - name: Create plugin ZIP
+        run: |
+          cd build
+          zip -r affilixwp-${VERSION}.zip affilixwp
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/affilixwp-${{ env.VERSION }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
