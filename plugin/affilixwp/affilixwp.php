@@ -16,7 +16,11 @@ require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
 require_once AFFILIXWP_PATH . 'includes/class-commissions.php';
 require_once AFFILIXWP_PATH . 'includes/class-stripe-webhook.php';
-require_once AFFILIXWP_PATH . 'admin/class-admin-menu.php';
+
+if (is_admin()) {
+    require_once AFFILIXWP_PATH . 'admin/class-admin-menu.php';
+}
+
 
 register_activation_hook(__FILE__, ['AffilixWP_Activator', 'activate']);
 
