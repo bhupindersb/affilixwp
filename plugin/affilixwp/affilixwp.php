@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.1.0');
+define('AFFILIXWP_VERSION', '0.1.2');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
