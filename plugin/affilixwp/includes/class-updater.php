@@ -10,8 +10,13 @@ class AffilixWP_Updater {
     private $api_url;
 
     public function __construct($plugin_file) {
+
+        // Absolute plugin file
         $this->plugin_file = $plugin_file;
-        $this->plugin_slug = plugin_basename($plugin_file);
+
+        // 🚨 MUST be exact: folder/plugin-file.php
+        $this->plugin_slug = 'affilixwp/affilixwp.php';
+
         $this->version = AFFILIXWP_VERSION;
         $this->license_key = get_option('affilixwp_license_key');
         $this->api_url = 'https://www.beveez.tech/api/update/check';
@@ -21,28 +26,38 @@ class AffilixWP_Updater {
     }
 
     public function check_for_update($transient) {
+
         if (empty($transient->checked)) {
             return $transient;
         }
 
         $response = wp_remote_post($this->api_url, [
             'timeout' => 15,
-            'headers' => ['Content-Type' => 'application/json'],
-            'body' => json_encode([
-                'slug'        => 'affilixwp',
-                'version'     => $this->version,
-                'licenseKey'  => $this->license_key,
-                'domain'      => home_url(),
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'body' => wp_json_encode([
+                'slug'       => 'affilixwp',
+                'version'    => $this->version,
+                'licenseKey' => $this->license_key,
+                'domain'     => home_url(),
             ]),
         ]);
 
         if (is_wp_error($response)) {
+            error_log('AffilixWP update error: ' . $response->get_error_message());
             return $transient;
         }
 
         $data = json_decode(wp_remote_retrieve_body($response));
 
-        if (!empty($data->new_version) && version_compare($this->version, $data->new_version, '<')) {
+        // 🔍 Debug (temporary)
+        error_log('AffilixWP update API response: ' . wp_remote_retrieve_body($response));
+
+        if (
+            !empty($data->new_version) &&
+            version_compare($this->version, $data->new_version, '<')
+        ) {
             $transient->response[$this->plugin_slug] = (object) [
                 'slug'        => 'affilixwp',
                 'plugin'      => $this->plugin_slug,
@@ -56,6 +71,7 @@ class AffilixWP_Updater {
     }
 
     public function plugin_info($false, $action, $args) {
+
         if ($action !== 'plugin_information' || $args->slug !== 'affilixwp') {
             return false;
         }
