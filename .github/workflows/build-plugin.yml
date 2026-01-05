@@ -24,11 +24,13 @@ jobs:
       - name: Create plugin ZIP
         run: |
           cd build
-          zip -r affilixwp-${VERSION}.zip affilixwp
+          zip -r affilixwp.zip affilixwp
+
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/affilixwp-${{ env.VERSION }}.zip
+          files: build/affilixwp.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
