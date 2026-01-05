@@ -10,12 +10,13 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.1.3');
+define('AFFILIXWP_VERSION', '0.1.4');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
 require_once AFFILIXWP_PATH . 'includes/class-commissions.php';
 require_once AFFILIXWP_PATH . 'includes/class-stripe-webhook.php';
+require_once AFFILIXWP_PATH . 'includes/class-updater.php';
 
 if (is_admin()) {
     require_once AFFILIXWP_PATH . 'admin/class-admin-menu.php';
@@ -30,6 +31,7 @@ add_action('plugins_loaded', function () {
 
     if (is_admin()) {
         new AffilixWP_Admin_Menu();
+        new AffilixWP_Updater(__FILE__);
     }
 });
 
