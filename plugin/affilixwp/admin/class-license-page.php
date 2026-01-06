@@ -70,9 +70,21 @@ class AffilixWP_License_Page {
             : '';
 
         update_option('affilixwp_license_key', $license_key);
-        update_option('affilixwp_license_status', $license_key ? 'inactive' : 'inactive');
+
+        // 🔥 Force re-validation immediately
+        delete_transient('affilixwp_license_check');
+
+        require_once AFFILIXWP_PATH . 'includes/class-license-validator.php';
+
+        $is_valid = AffilixWP_License_Validator::validate();
+
+        update_option(
+            'affilixwp_license_status',
+            $is_valid ? 'active' : 'inactive'
+        );
 
         wp_redirect(admin_url('admin.php?page=affilixwp-license&saved=1'));
         exit;
+
     }
 }
