@@ -60,6 +60,29 @@ class AffilixWP_Admin_Menu {
                 <?php submit_button('Save License'); ?>
             </form>
         </div>
+        <hr>
+        <h2>Manual Commission Test</h2>
+
+        <form method="post">
+            <?php wp_nonce_field('affilixwp_test_commission'); ?>
+
+            <table class="form-table">
+                <tr>
+                    <th>User ID (Buyer)</th>
+                    <td>
+                        <input type="number" name="test_user_id" required />
+                    </td>
+                </tr>
+                <tr>
+                    <th>Purchase Amount</th>
+                    <td>
+                        <input type="number" step="0.01" name="test_amount" required />
+                    </td>
+                </tr>
+            </table>
+
+            <?php submit_button('Simulate Purchase'); ?>
+        </form>
         <?php
     }
 
@@ -115,4 +138,29 @@ class AffilixWP_Admin_Menu {
             </div>';
         }
     }
+
+    public function handle_commission_test() {
+        if (
+            !isset($_POST['test_user_id'], $_POST['test_amount']) ||
+            !check_admin_referer('affilixwp_test_commission')
+        ) {
+            return;
+        }
+
+        $user_id = intval($_POST['test_user_id']);
+        $amount  = floatval($_POST['test_amount']);
+
+        require_once AFFILIXWP_PATH . 'includes/class-commission-engine.php';
+
+        AffilixWP_Commission_Engine::record_purchase(
+            $user_id,
+            $amount,
+            'manual_test'
+        );
+
+        add_action('admin_notices', function () {
+            echo '<div class="notice notice-success"><p>Commission recorded.</p></div>';
+        });
+    }
+
 }
