@@ -66,7 +66,7 @@ class AffilixWP_Admin_Menu {
     update_option('affilixwp_license_key', $license_key);
 
     $response = wp_remote_post(
-      'https://www.beveez.tech/api/license/verify',
+      'https://www.beveez.tech/api/license/validate',
       [
         'headers' => ['Content-Type' => 'application/json'],
         'body' => json_encode([
