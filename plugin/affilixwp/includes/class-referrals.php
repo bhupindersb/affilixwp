@@ -1,40 +1,76 @@
 <?php
+if (!defined('ABSPATH')) exit;
+
 class AffilixWP_Referrals {
 
     public function __construct() {
-        add_action('user_register', [$this, 'capture_referral']);
+        add_action('init', [$this, 'capture_referral']);
+        add_action('user_register', [$this, 'handle_user_registration']);
     }
 
-    public function capture_referral($user_id) {
-        if (empty($_COOKIE['affilixwp_referrer'])) return;
+    public function capture_referral() {
+        if (!isset($_GET['ref'])) {
+            return;
+        }
 
-        $referrer_id = intval($_COOKIE['affilixwp_referrer']);
-        if ($referrer_id === $user_id) return;
+        $ref = sanitize_text_field($_GET['ref']);
+
+        setcookie(
+            'affilixwp_ref',
+            $ref,
+            time() + (30 * DAY_IN_SECONDS),
+            COOKIEPATH,
+            COOKIE_DOMAIN
+        );
+    }
+
+    public function handle_user_registration($user_id) {
+        if (!isset($_COOKIE['affilixwp_ref'])) {
+            return;
+        }
+
+        $referral_code = sanitize_text_field($_COOKIE['affilixwp_ref']);
 
         global $wpdb;
-        $table = $wpdb->prefix . 'affilixwp_referrals';
+        $affiliates = $wpdb->prefix . 'affilixwp_affiliates';
+        $referrals  = $wpdb->prefix . 'affilixwp_referrals';
 
-        // Level 1
-        $wpdb->insert($table, [
-            'referrer_user_id' => $referrer_id,
-            'referred_user_id' => $user_id,
-            'level' => 1
-        ]);
-
-        // Level 2 (if exists)
-        $parent_referrer = $wpdb->get_var(
+        // Find referrer
+        $referrer = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT referrer_user_id FROM $table WHERE referred_user_id = %d AND level = 1",
-                $referrer_id
+                "SELECT * FROM $affiliates WHERE referral_code = %s",
+                $referral_code
             )
         );
 
-        if ($parent_referrer) {
-            $wpdb->insert($table, [
-                'referrer_user_id' => $parent_referrer,
-                'referred_user_id' => $user_id,
-                'level' => 2
+        if (!$referrer) {
+            return;
+        }
+
+        // Level 1
+        $wpdb->insert($referrals, [
+            'referrer_id'       => $referrer->user_id,
+            'referred_user_id'  => $user_id,
+            'level'             => 1,
+        ]);
+
+        // Level 2 (if exists)
+        $parent = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM $referrals WHERE referred_user_id = %d AND level = 1",
+                $referrer->user_id
+            )
+        );
+
+        if ($parent) {
+            $wpdb->insert($referrals, [
+                'referrer_id'       => $parent->referrer_id,
+                'referred_user_id'  => $user_id,
+                'level'             => 2,
             ]);
         }
+
+        // Cleanup cookie
+        setcookie('affilixwp_ref', '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN);
     }
 }
