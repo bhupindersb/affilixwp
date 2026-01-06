@@ -7,6 +7,7 @@ class AffilixWP_Admin_Menu {
         add_action('admin_menu', [$this, 'register_menu']);
         add_action('admin_init', [$this, 'handle_license_save']);
         add_action('admin_notices', [$this, 'license_notice']);
+        add_action('admin_init', [$this, 'handle_commission_test']);
     }
 
     public function register_menu() {
