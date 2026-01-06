@@ -17,14 +17,19 @@ class AffilixWP_Commissions {
             $rate = ($ref->level === 1) ? 0.10 : 0.05;
             $commission = round($amount * $rate, 2);
 
-            $wpdb->insert($commissions_table, [
-                'referrer_user_id' => $ref->referrer_user_id,
-                'referred_user_id' => $user_id,
-                'order_id' => $order_id,
-                'level' => $ref->level,
-                'commission_amount' => $commission,
-                'order_amount' => $amount,
-            ]);
+            $wpdb->insert(
+                $wpdb->prefix . 'affilixwp_commissions',
+                [
+                    'affiliate_id'      => $affiliate_id,
+                    'referred_user_id'  => $user_id,
+                    'amount'            => $amount,
+                    'commission'        => $commission,
+                    'level'             => $level,
+                    'source'            => 'manual_test',
+                    'created_at'        => current_time('mysql'),
+                ],
+                ['%d', '%d', '%f', '%f', '%d', '%s', '%s']
+            );
         }
     }
 }
