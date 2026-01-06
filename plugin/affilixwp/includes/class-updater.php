@@ -11,15 +11,13 @@ class AffilixWP_Updater {
 
     public function __construct($plugin_file) {
 
-        // Absolute plugin file
+        // Must match: folder/plugin.php
         $this->plugin_file = $plugin_file;
-
-        // 🚨 MUST be exact: folder/plugin-file.php
         $this->plugin_slug = 'affilixwp/affilixwp.php';
 
-        $this->version = AFFILIXWP_VERSION;
+        $this->version     = AFFILIXWP_VERSION;
         $this->license_key = get_option('affilixwp_license_key');
-        $this->api_url = 'https://www.beveez.tech/api/update/check';
+        $this->api_url     = 'https://www.beveez.tech/api/update/check';
 
         add_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_update']);
         add_filter('plugins_api', [$this, 'plugin_info'], 10, 3);
@@ -27,16 +25,19 @@ class AffilixWP_Updater {
 
     public function check_for_update($transient) {
 
+        // 🚫 Block updates if license inactive
+        if (get_option('affilixwp_license_status') !== 'active') {
+            return $transient;
+        }
+
         if (empty($transient->checked)) {
             return $transient;
         }
 
         $response = wp_remote_post($this->api_url, [
             'timeout' => 15,
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ],
-            'body' => wp_json_encode([
+            'headers' => ['Content-Type' => 'application/json'],
+            'body'    => wp_json_encode([
                 'slug'       => 'affilixwp',
                 'version'    => $this->version,
                 'licenseKey' => $this->license_key,
@@ -45,14 +46,10 @@ class AffilixWP_Updater {
         ]);
 
         if (is_wp_error($response)) {
-            error_log('AffilixWP update error: ' . $response->get_error_message());
             return $transient;
         }
 
         $data = json_decode(wp_remote_retrieve_body($response));
-
-        // 🔍 Debug (temporary)
-        error_log('AffilixWP update API response: ' . wp_remote_retrieve_body($response));
 
         if (
             !empty($data->new_version) &&
@@ -77,12 +74,12 @@ class AffilixWP_Updater {
         }
 
         return (object) [
-            'name'        => 'AffilixWP',
-            'slug'        => 'affilixwp',
-            'version'     => $this->version,
-            'author'      => 'AffilixWP',
-            'homepage'    => 'https://www.beveez.tech/affilixwp',
-            'sections'    => [
+            'name'     => 'AffilixWP',
+            'slug'     => 'affilixwp',
+            'version'  => $this->version,
+            'author'   => 'AffilixWP',
+            'homepage' => 'https://www.beveez.tech/affilixwp',
+            'sections' => [
                 'description' => 'Affiliate & multi-level commission tracking for WordPress.',
             ],
         ];
