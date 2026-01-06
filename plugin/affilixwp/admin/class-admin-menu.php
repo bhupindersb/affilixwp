@@ -28,12 +28,18 @@ class AffilixWP_Admin_Menu {
             ? '<span style="color:green;font-weight:bold">Active</span>'
             : '<span style="color:red;font-weight:bold">Inactive</span>';
 
+        $plan = get_option('affilixwp_license_plan', '—');
+        $sites = get_option('affilixwp_license_sites', 0);    
         ?>
+        
         <div class="wrap">
             <h1>AffilixWP License</h1>
 
             <p><strong>Status:</strong> <?php echo $badge; ?></p>
-
+            <?php
+              echo "<p><strong>Plan:</strong> {$plan}</p>";
+              echo "<p><strong>Sites Used:</strong> {$sites}</p>";
+            ?>
             <form method="post">
                 <?php wp_nonce_field('affilixwp_license_save'); ?>
 
