@@ -14,34 +14,34 @@ class AffilixWP_Admin_Menu {
             'AffilixWP',
             'AffilixWP',
             'manage_options',
-            'affilixwp-license',
+            'affilixwp',
             [$this, 'render_page'],
             'dashicons-admin-network'
         );
     }
 
     public function render_page() {
-        $license_key = get_option('affilixwp_license_key', '');
-        $status      = get_option('affilixwp_license_status', 'inactive');
+        $license_key   = get_option('affilixwp_license_key', '');
+        $status        = get_option('affilixwp_license_status', 'inactive');
+        $plan          = get_option('affilixwp_license_plan', '—');
+        $sites_used    = get_option('affilixwp_license_sites', 0);
 
-        $badge = $status === 'active'
-            ? '<span style="color:green;font-weight:bold">Active</span>'
-            : '<span style="color:red;font-weight:bold">Inactive</span>';
-
-        $plan = get_option('affilixwp_license_plan', '—');
-        $sites = get_option('affilixwp_license_sites', 0);    
         ?>
-        
         <div class="wrap">
             <h1>AffilixWP License</h1>
 
-            <p><strong>Status:</strong> <?php echo $badge; ?></p>
-            <?php
-              echo "<p><strong>Plan:</strong> {$plan}</p>";
-              echo "<p><strong>Sites Used:</strong> {$sites}</p>";
-            ?>
+            <p>
+                <strong>Status:</strong>
+                <span style="color:<?php echo $status === 'active' ? 'green' : 'red'; ?>">
+                    <?php echo ucfirst($status); ?>
+                </span>
+            </p>
+
+            <p><strong>Plan:</strong> <?php echo esc_html($plan); ?></p>
+            <p><strong>Sites Used:</strong> <?php echo esc_html($sites_used); ?></p>
+
             <form method="post">
-                <?php wp_nonce_field('affilixwp_license_save'); ?>
+                <?php wp_nonce_field('affilixwp_save_license'); ?>
 
                 <table class="form-table">
                     <tr>
@@ -62,6 +62,7 @@ class AffilixWP_Admin_Menu {
         </div>
         <?php
     }
+
 
     public function handle_license_save() {
         if (
