@@ -3,37 +3,41 @@ if (!defined('ABSPATH')) exit;
 
 class AffilixWP_Commission_Engine {
 
-    public static function add_manual_test_commission($buyer_user_id, $order_amount = 100) {
+    /**
+     * Canonical purchase handler
+     */
+    public static function record_purchase($buyer_user_id, $order_amount = 100, $reference = 'manual_test') {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'affilixwp_commissions';
+        $commissions_table = $wpdb->prefix . 'affilixwp_commissions';
+        $referrals_table   = $wpdb->prefix . 'affilixwp_referrals';
 
-        // Prevent duplicate test commissions
+        // Prevent duplicate processing
         $exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $table 
-             WHERE source_user_id = %d AND source = %s",
+            "SELECT COUNT(*) FROM $commissions_table 
+             WHERE source_user_id = %d AND reference = %s",
             $buyer_user_id,
-            'manual_test'
+            $reference
         ));
 
         if ($exists) {
             return;
         }
 
-        // Get referral chain
+        // Fetch referral chain
         $referrals = $wpdb->get_results($wpdb->prepare(
             "SELECT referrer_user_id, level 
-             FROM {$wpdb->prefix}affilixwp_referrals
+             FROM $referrals_table
              WHERE referred_user_id = %d",
             $buyer_user_id
         ));
 
         foreach ($referrals as $ref) {
-            $commission_rate = ($ref->level === 1) ? 0.10 : 0.05;
-            $commission = $order_amount * $commission_rate;
+            $rate = ($ref->level == 1) ? 0.10 : 0.05;
+            $commission = $order_amount * $rate;
 
             $wpdb->insert(
-                $table,
+                $commissions_table,
                 [
                     'affiliate_id'       => $ref->referrer_user_id,
                     'referrer_user_id'   => $ref->referrer_user_id,
@@ -42,7 +46,7 @@ class AffilixWP_Commission_Engine {
                     'commission_amount'  => $commission,
                     'level'              => $ref->level,
                     'status'             => 'pending',
-                    'source'             => 'manual_test',
+                    'reference'          => $reference,
                     'created_at'         => current_time('mysql'),
                 ],
                 [
@@ -50,5 +54,12 @@ class AffilixWP_Commission_Engine {
                 ]
             );
         }
+    }
+
+    /**
+     * Backward-compatible helper for testing
+     */
+    public static function add_manual_test_commission($buyer_user_id) {
+        self::record_purchase($buyer_user_id, 100, 'manual_test');
     }
 }
