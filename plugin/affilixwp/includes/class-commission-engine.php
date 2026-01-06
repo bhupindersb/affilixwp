@@ -3,66 +3,52 @@ if (!defined('ABSPATH')) exit;
 
 class AffilixWP_Commission_Engine {
 
-    const LEVEL_1_RATE = 0.10; // 10%
-    const LEVEL_2_RATE = 0.05; // 5%
-
-    public static function record_purchase($user_id, $amount, $source = 'manual') {
+    public static function add_manual_test_commission($buyer_user_id, $order_amount = 100) {
         global $wpdb;
 
-        if (!$user_id || $amount <= 0) {
-            return false;
+        $table = $wpdb->prefix . 'affilixwp_commissions';
+
+        // Prevent duplicate test commissions
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table 
+             WHERE source_user_id = %d AND source = %s",
+            $buyer_user_id,
+            'manual_test'
+        ));
+
+        if ($exists) {
+            return;
         }
 
-        // Fetch referral chain
-        $referrals = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM {$wpdb->prefix}affilixwp_referrals 
-                 WHERE referred_user_id = %d",
-                $user_id
-            )
-        );
-
-        if (empty($referrals)) {
-            return false;
-        }
+        // Get referral chain
+        $referrals = $wpdb->get_results($wpdb->prepare(
+            "SELECT referrer_user_id, level 
+             FROM {$wpdb->prefix}affilixwp_referrals
+             WHERE referred_user_id = %d",
+            $buyer_user_id
+        ));
 
         foreach ($referrals as $ref) {
-            $rate = ($ref->level == 1)
-                ? self::LEVEL_1_RATE
-                : (($ref->level == 2) ? self::LEVEL_2_RATE : 0);
-
-            if ($rate === 0) continue;
-
-            $commission = round($amount * $rate, 2);
-
-            // Prevent duplicate commissions
-            $exists = $wpdb->get_var(
-                $wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$wpdb->prefix}affilixwp_commissions
-                     WHERE user_id = %d AND affiliate_id = %d AND source = %s",
-                    $user_id,
-                    $ref->referrer_user_id,
-                    $source
-                )
-            );
-
-            if ($exists) continue;
+            $commission_rate = ($ref->level === 1) ? 0.10 : 0.05;
+            $commission = $order_amount * $commission_rate;
 
             $wpdb->insert(
-                "{$wpdb->prefix}affilixwp_commissions",
+                $table,
                 [
-                    'affiliate_id' => $ref->referrer_user_id,
-                    'user_id'      => $user_id,
-                    'amount'       => $amount,
-                    'commission'   => $commission,
-                    'level'        => $ref->level,
-                    'source'       => $source,
-                    'created_at'   => current_time('mysql'),
+                    'affiliate_id'       => $ref->referrer_user_id,
+                    'referrer_user_id'   => $ref->referrer_user_id,
+                    'source_user_id'     => $buyer_user_id,
+                    'order_amount'       => $order_amount,
+                    'commission_amount'  => $commission,
+                    'level'              => $ref->level,
+                    'status'             => 'pending',
+                    'source'             => 'manual_test',
+                    'created_at'         => current_time('mysql'),
                 ],
-                ['%d','%d','%f','%f','%d','%s','%s']
+                [
+                    '%d','%d','%d','%f','%f','%d','%s','%s','%s'
+                ]
             );
         }
-
-        return true;
     }
 }
