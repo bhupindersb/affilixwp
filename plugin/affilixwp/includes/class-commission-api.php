@@ -14,9 +14,19 @@ class AffilixWP_Commission_API {
     }
 
     public function verify_request($request) {
+
+        $headers = $request->get_headers();
+        error_log('AFFILIXWP DEBUG HEADERS: ' . print_r($headers, true));
+
         $secret = $request->get_header('x-affilixwp-secret');
-        return hash_equals(get_option('affilixwp_api_secret'), $secret);
+        error_log('AFFILIXWP DEBUG SECRET HEADER: ' . var_export($secret, true));
+
+        $stored = get_option('affilixwp_api_secret');
+        error_log('AFFILIXWP DEBUG STORED SECRET: ' . $stored);
+
+        return hash_equals($stored, (string) $secret);
     }
+
 
     public function handle_commission($request) {
 
