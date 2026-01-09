@@ -4,67 +4,109 @@ if (!defined('ABSPATH')) exit;
 class AffilixWP_Commission_REST {
 
     public static function register() {
-        register_rest_route('affilixwp/v1', '/record-purchase', [
+        register_rest_route('affilixwp/v1', '/commission', [
             'methods'  => 'POST',
             'callback' => [self::class, 'handle'],
             'permission_callback' => '__return_true',
         ]);
     }
 
-    public static function handle($request) {
+    public static function handle(WP_REST_Request $request) {
         global $wpdb;
 
-        // 🔐 Verify secret
-        $secret = $request->get_header('X-AffilixWP-Secret');
-        if ($secret !== get_option('affilixwp_api_secret')) {
-            return new WP_Error('unauthorized', 'Invalid secret', ['status' => 403]);
+        /* ----------------------------
+           🔐 Verify API secret
+        ----------------------------- */
+        $secret = $request->get_header('x-affilixwp-secret');
+        $expected = get_option('affilixwp_api_secret');
+
+        if (!$secret || !hash_equals($expected, $secret)) {
+            return new WP_Error(
+                'forbidden',
+                'Invalid API secret',
+                ['status' => 403]
+            );
         }
 
-        $user_id  = (int) $request['user_id'];
-        $amount   = (float) $request['amount'];
-        $reference = sanitize_text_field($request['reference']);
+        /* ----------------------------
+           📦 Read payload
+        ----------------------------- */
+        $buyer_user_id = (int) $request->get_param('buyer_user_id');
+        $amount        = (float) $request->get_param('amount');
+        $reference     = sanitize_text_field($request->get_param('reference'));
 
-        if (!$user_id || !$amount || !$reference) {
-            return new WP_Error('invalid', 'Missing parameters');
+        if (!$buyer_user_id || !$amount || !$reference) {
+            return new WP_Error(
+                'invalid_request',
+                'Missing required parameters',
+                ['status' => 400]
+            );
         }
 
         $table = $wpdb->prefix . 'affilixwp_commissions';
 
-        // 🛑 Prevent duplicate commissions
-        $exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $table WHERE reference = %s",
-            $reference
-        ));
+        /* ----------------------------
+           🛑 Prevent duplicates
+        ----------------------------- */
+        $exists = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$table} WHERE reference = %s",
+                $reference
+            )
+        );
 
         if ($exists) {
-            return ['status' => 'duplicate'];
+            return [
+                'status' => 'duplicate',
+                'message' => 'Commission already recorded',
+            ];
         }
 
-        // 🔗 Get referral chain
-        $referrals = $wpdb->get_results($wpdb->prepare(
-            "SELECT referrer_user_id, level
-             FROM {$wpdb->prefix}affilixwp_referrals
-             WHERE referred_user_id = %d",
-            $user_id
-        ));
+        /* ----------------------------
+           🔗 Get referral chain
+        ----------------------------- */
+        $referrals = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT referrer_user_id, level
+                 FROM {$wpdb->prefix}affilixwp_referrals
+                 WHERE referred_user_id = %d",
+                $buyer_user_id
+            )
+        );
+
+        if (empty($referrals)) {
+            return [
+                'status' => 'success',
+                'message' => 'No referrers found',
+            ];
+        }
 
         foreach ($referrals as $ref) {
-            $rate = $ref->level == 1 ? 0.10 : 0.05;
+            $rate = ((int) $ref->level === 1) ? 0.10 : 0.05;
             $commission = round($amount * $rate, 2);
 
-            $wpdb->insert($table, [
-                'affiliate_id'       => 0,
-                'referrer_user_id'   => $ref->referrer_user_id,
-                'referred_user_id'   => $user_id,
-                'order_amount'       => $amount,
-                'commission_amount'  => $commission,
-                'level'              => $ref->level,
-                'status'             => 'pending',
-                'created_at'         => current_time('mysql'),
-                'reference'          => $reference,
-            ]);
+            $wpdb->insert(
+                $table,
+                [
+                    'affiliate_id'      => 0,
+                    'referrer_user_id'  => (int) $ref->referrer_user_id,
+                    'referred_user_id'  => $buyer_user_id,
+                    'order_amount'      => $amount,
+                    'commission_amount' => $commission,
+                    'level'             => (int) $ref->level,
+                    'status'            => 'pending',
+                    'reference'         => $reference,
+                    'created_at'        => current_time('mysql'),
+                ],
+                [
+                    '%d','%d','%d','%f','%f','%d','%s','%s','%s'
+                ]
+            );
         }
 
-        return ['status' => 'success'];
+        return [
+            'status'  => 'success',
+            'message' => 'Commission recorded',
+        ];
     }
 }
