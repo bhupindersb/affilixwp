@@ -17,10 +17,10 @@ class AffilixWP_Commission_REST {
         /* ----------------------------
            🔐 Verify API secret
         ----------------------------- */
-        $secret = $request->get_header('x-affilixwp-secret');
+        $secret   = $_SERVER['HTTP_X_AFFILIXWP_SECRET'] ?? '';
         $expected = get_option('affilixwp_api_secret');
 
-        if (!$secret || !hash_equals($expected, $secret)) {
+        if (!$secret || !$expected || !hash_equals($expected, $secret)) {
             return new WP_Error(
                 'forbidden',
                 'Invalid API secret',
@@ -57,13 +57,13 @@ class AffilixWP_Commission_REST {
 
         if ($exists) {
             return [
-                'status' => 'duplicate',
+                'status'  => 'duplicate',
                 'message' => 'Commission already recorded',
             ];
         }
 
         /* ----------------------------
-           🔗 Get referral chain
+           🔗 Referral chain
         ----------------------------- */
         $referrals = $wpdb->get_results(
             $wpdb->prepare(
@@ -73,13 +73,6 @@ class AffilixWP_Commission_REST {
                 $buyer_user_id
             )
         );
-
-        if (empty($referrals)) {
-            return [
-                'status' => 'success',
-                'message' => 'No referrers found',
-            ];
-        }
 
         foreach ($referrals as $ref) {
             $rate = ((int) $ref->level === 1) ? 0.10 : 0.05;
@@ -97,9 +90,6 @@ class AffilixWP_Commission_REST {
                     'status'            => 'pending',
                     'reference'         => $reference,
                     'created_at'        => current_time('mysql'),
-                ],
-                [
-                    '%d','%d','%d','%f','%f','%d','%s','%s','%s'
                 ]
             );
         }
