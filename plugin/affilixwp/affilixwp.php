@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.2.17
+ * Version: 0.2.18
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.2.17');
+define('AFFILIXWP_VERSION', '0.2.18');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
@@ -85,15 +85,24 @@ add_action('wp_enqueue_scripts', function () {
     }
 
     wp_enqueue_script(
+        'razorpay-checkout',
+        'https://checkout.razorpay.com/v1/checkout.js',
+        [],
+        null,
+        true
+    );
+
+    wp_enqueue_script(
         'affilixwp-checkout',
         AFFILIXWP_URL . 'assets/js/checkout.js',
-        [],
+        ['razorpay-checkout'],
         AFFILIXWP_VERSION,
         true
     );
 
     wp_localize_script('affilixwp-checkout', 'AffilixWP', [
-        'wp_user_id' => get_current_user_id(),
-        'api_url'    => 'https://www.beveez.tech/api',
+        'wp_user_id'    => get_current_user_id(),
+        'api_url'       => 'https://www.beveez.tech/api',
+        'razorpay_key'  => 'rzp_test_Rz1RCeqZkvRXeE', // 🔁 YOUR PUBLIC KEY
     ]);
 });

@@ -1,49 +1,60 @@
-/**
- * AffilixWP Checkout Script
- * Loaded only for logged-in users
- */
-
 document.addEventListener("DOMContentLoaded", function () {
 
-  // 🔍 Debug – confirm data is coming from WordPress
-  console.log("WP User ID:", AffilixWP.wp_user_id);
-  console.log("API URL:", AffilixWP.api_url);
+  const buyBtn = document.getElementById("affilixwp-buy-btn");
+  const statusEl = document.getElementById("affilixwp-status");
 
-  // Example: Start subscription checkout
-  window.startAffilixWPCheckout = async function () {
+  if (!buyBtn) return;
 
-    if (!AffilixWP || !AffilixWP.wp_user_id) {
-      alert("You must be logged in to purchase.");
+  buyBtn.addEventListener("click", async function () {
+
+    if (!window.AffilixWP || !AffilixWP.wp_user_id) {
+      alert("Please log in to continue.");
       return;
     }
 
+    statusEl.innerText = "Creating subscription...";
+
     try {
-      const response = await fetch(
+      // 1️⃣ Create Razorpay subscription
+      const res = await fetch(
         `${AffilixWP.api_url}/razorpay/create-subscription`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            planId: "plan_xxxxx", // 🔁 replace with real Razorpay plan ID
-            wpUserId: AffilixWP.wp_user_id, // ✅ THIS IS THE KEY PART
+            planId: "plan_Rz1Wf5QAFCxCOA", // 🔁 REPLACE WITH REAL PLAN ID
+            wpUserId: AffilixWP.wp_user_id,
           }),
         }
       );
 
-      if (!response.ok) {
+      if (!res.ok) {
         throw new Error("Failed to create subscription");
       }
 
-      const subscription = await response.json();
+      const subscription = await res.json();
 
-      console.log("Subscription created:", subscription);
+      // 2️⃣ Open Razorpay Checkout
+      const options = {
+        key: AffilixWP.razorpay_key, // public key
+        subscription_id: subscription.id,
+        name: "AffilixWP",
+        description: "AffilixWP Subscription",
+        handler: function () {
+          statusEl.innerText = "Payment successful. Processing...";
+        },
+        theme: {
+          color: "#4F46E5",
+        },
+      };
 
-      // TODO: Open Razorpay Checkout here
-      // This will use subscription.id
+      const rzp = new Razorpay(options);
+      rzp.open();
 
-    } catch (error) {
-      console.error("Checkout error:", error);
-      alert("Something went wrong. Please try again.");
+    } catch (err) {
+      console.error(err);
+      statusEl.innerText = "Checkout failed.";
+      alert("Something went wrong.");
     }
-  };
+  });
 });
