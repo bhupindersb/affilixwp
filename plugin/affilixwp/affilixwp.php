@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.2.22
+ * Version: 0.2.23
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.2.22');
+define('AFFILIXWP_VERSION', '0.2.23');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
@@ -24,6 +24,14 @@ require_once AFFILIXWP_PATH . 'includes/class-affiliate-dashboard.php';
 require_once AFFILIXWP_PATH . 'includes/class-referral-tracker.php';
 require_once AFFILIXWP_PATH . 'includes/class-commission-api.php';
 require_once AFFILIXWP_PATH . 'includes/class-commission-rest.php';
+
+
+// ✅ Ensure REST routes are always registered
+add_action('init', function () {
+    if (class_exists('AffilixWP_Commission_REST')) {
+        add_action('rest_api_init', ['AffilixWP_Commission_REST', 'register']);
+    }
+});
 
 
 if (is_admin()) {
@@ -67,7 +75,6 @@ add_action('admin_init', function () {
     AffilixWP_License_Validator::validate();
 });
 
-add_action('rest_api_init', ['AffilixWP_Commission_REST', 'register']);
 
 
 add_action('admin_init', function () {
