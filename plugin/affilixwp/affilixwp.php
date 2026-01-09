@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.2.27
+ * Version: 0.2.28
  * Author: AffilixWP
  */
 
@@ -17,7 +17,7 @@ add_action('admin_init', function () {
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.2.27');
+define('AFFILIXWP_VERSION', '0.2.28');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
@@ -25,10 +25,10 @@ require_once AFFILIXWP_PATH . 'includes/class-stripe-webhook.php';
 require_once AFFILIXWP_PATH . 'includes/class-updater.php';
 require_once AFFILIXWP_PATH . 'includes/class-license-validator.php';
 require_once AFFILIXWP_PATH . 'includes/class-affiliates.php';
-require_once AFFILIXWP_PATH . 'includes/class-commission-engine.php';
 require_once AFFILIXWP_PATH . 'includes/class-affiliate-dashboard.php';
 require_once AFFILIXWP_PATH . 'includes/class-referral-tracker.php';
 require_once AFFILIXWP_PATH . 'includes/class-commission-api.php';
+require_once AFFILIXWP_PATH . 'includes/class-commission-engine.php';
 
 
 
@@ -55,12 +55,12 @@ register_activation_hook(__FILE__, function () {
 
 add_action('plugins_loaded', function () {
     new AffilixWP_Referrals();
-    new AffilixWP_Commission_Engine();
     new AffilixWP_Stripe_Webhook();
     new AffilixWP_Affiliates();
     new AffilixWP_Affiliate_Dashboard();
     new AffilixWP_Referral_Tracker();
     new AffilixWP_Commission_API();
+    new AffilixWP_Commission_Engine();
 
 
     if (is_admin()) {

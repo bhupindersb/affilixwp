@@ -8,27 +8,27 @@ class AffilixWP_Commission_API {
             register_rest_route('affilixwp/v1', '/commission', [
                 'methods'  => 'POST',
                 'callback' => [$this, 'handle_commission'],
-                'permission_callback' => [$this, 'verify_request'],
+                'permission_callback' => '__return_true',
             ]);
         });
     }
 
-    public function verify_request($request) {
-
-        $headers = $request->get_headers();
-        error_log('AFFILIXWP DEBUG HEADERS: ' . print_r($headers, true));
-
+    private function verify_secret($request) {
         $secret = $request->get_header('x-affilixwp-secret');
-        error_log('AFFILIXWP DEBUG SECRET HEADER: ' . var_export($secret, true));
-
         $stored = get_option('affilixwp_api_secret');
-        error_log('AFFILIXWP DEBUG STORED SECRET: ' . $stored);
 
-        return hash_equals($stored, (string) $secret);
+        if (!$secret || !$stored) {
+            return false;
+        }
+
+        return hash_equals(trim($stored), trim($secret));
     }
 
-
     public function handle_commission($request) {
+
+        if (!$this->verify_secret($request)) {
+            return new WP_Error('unauthorized', 'Invalid secret', ['status' => 403]);
+        }
 
         $buyer_user_id = (int) $request->get_param('buyer_user_id');
         $amount        = (float) $request->get_param('amount');
@@ -44,6 +44,11 @@ class AffilixWP_Commission_API {
             $reference
         );
 
-        return ['success' => true];
+        return [
+            'success' => true,
+            'buyer_user_id' => $buyer_user_id,
+            'amount' => $amount,
+            'reference' => $reference
+        ];
     }
 }
