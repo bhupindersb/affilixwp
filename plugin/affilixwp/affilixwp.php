@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.2.16
+ * Version: 0.2.17
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.2.16');
+define('AFFILIXWP_VERSION', '0.2.17');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
@@ -76,4 +76,24 @@ add_action('admin_init', function () {
         $buyer_user_id = (int) $_GET['affilixwp_test_commission'];
         AffilixWP_Commission_Engine::add_manual_test_commission($buyer_user_id);
     }
+});
+
+add_action('wp_enqueue_scripts', function () {
+
+    if (!is_user_logged_in()) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'affilixwp-checkout',
+        AFFILIXWP_URL . 'assets/js/checkout.js',
+        [],
+        AFFILIXWP_VERSION,
+        true
+    );
+
+    wp_localize_script('affilixwp-checkout', 'AffilixWP', [
+        'wp_user_id' => get_current_user_id(),
+        'api_url'    => 'https://www.beveez.tech/api',
+    ]);
 });
