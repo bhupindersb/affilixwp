@@ -4,38 +4,23 @@ if (!defined('ABSPATH')) exit;
 class AffilixWP_Commission_API {
 
     public function __construct() {
-        add_action('rest_api_init', function () {
-            register_rest_route('affilixwp/v1', '/record-commission', [
-                'methods'  => 'POST',
-                'callback' => [$this, 'handle_commission'],
-                'permission_callback' => '__return_true',
-            ]);
-        });
+        add_action('wp_ajax_affilixwp_record_commission', [$this, 'handle']);
+        add_action('wp_ajax_nopriv_affilixwp_record_commission', [$this, 'handle']);
     }
 
-    private function verify_secret($request) {
-        $secret = $request->get_header('x-affilixwp-secret');
-        $stored = get_option('affilixwp_api_secret');
-
-        if (!$secret || !$stored) {
-            return false;
+    public function handle() {
+        // 🔐 Verify secret
+        $secret = $_SERVER['HTTP_X_AFFILIXWP_SECRET'] ?? '';
+        if (!hash_equals(get_option('affilixwp_api_secret'), $secret)) {
+            wp_send_json_error('Unauthorized', 403);
         }
 
-        return hash_equals(trim($stored), trim($secret));
-    }
-
-    public function handle_commission($request) {
-
-        if (!$this->verify_secret($request)) {
-            return new WP_Error('unauthorized', 'Invalid secret', ['status' => 403]);
-        }
-
-        $buyer_user_id = (int) $request->get_param('buyer_user_id');
-        $amount        = (float) $request->get_param('amount');
-        $reference     = sanitize_text_field($request->get_param('reference'));
+        $buyer_user_id = (int) ($_POST['buyer_user_id'] ?? 0);
+        $amount        = (float) ($_POST['amount'] ?? 0);
+        $reference     = sanitize_text_field($_POST['reference'] ?? '');
 
         if (!$buyer_user_id || !$amount || !$reference) {
-            return new WP_Error('invalid', 'Invalid data', ['status' => 400]);
+            wp_send_json_error('Invalid data', 400);
         }
 
         AffilixWP_Commission_Engine::record_purchase(
@@ -44,11 +29,6 @@ class AffilixWP_Commission_API {
             $reference
         );
 
-        return [
-            'success' => true,
-            'buyer_user_id' => $buyer_user_id,
-            'amount' => $amount,
-            'reference' => $reference
-        ];
+        wp_send_json_success(['recorded' => true]);
     }
 }
