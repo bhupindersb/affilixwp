@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.2.31
+ * Version: 0.2.32
  * Author: AffilixWP
  */
 
@@ -17,7 +17,7 @@ add_action('admin_init', function () {
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.2.31');
+define('AFFILIXWP_VERSION', '0.2.32');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
@@ -54,14 +54,15 @@ register_activation_hook(__FILE__, function () {
 
 
 add_action('plugins_loaded', function () {
+
     new AffilixWP_Referrals();
     new AffilixWP_Stripe_Webhook();
     new AffilixWP_Affiliates();
     new AffilixWP_Affiliate_Dashboard();
     new AffilixWP_Referral_Tracker();
-    new AffilixWP_Commission_API();
-    new AffilixWP_Commission_Engine();
 
+    // 🔥 THIS is what registers /commission
+    new AffilixWP_Commission_API();
 
     if (is_admin()) {
         new AffilixWP_Admin_Menu();

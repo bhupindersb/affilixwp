@@ -33,13 +33,14 @@ class AffilixWP_Commission_API {
         $reference     = sanitize_text_field($request->get_param('reference'));
 
         if (!$buyer_user_id || !$amount || !$reference) {
-            return new WP_Error('invalid', 'Missing or invalid parameters', ['status' => 400]);
+            return new WP_Error(
+                'invalid_data',
+                'Missing or invalid parameters',
+                ['status' => 400]
+            );
         }
 
-        if (!class_exists('AffilixWP_Commission_Engine')) {
-            return new WP_Error('engine_missing', 'Commission engine not loaded', ['status' => 500]);
-        }
-
+        // 🔥 Canonical commission handler
         AffilixWP_Commission_Engine::record_purchase(
             $buyer_user_id,
             $amount,
