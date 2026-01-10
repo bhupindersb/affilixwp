@@ -1,28 +1,28 @@
 document.addEventListener("DOMContentLoaded", function () {
-
   const buyBtn = document.getElementById("affilixwp-buy-btn");
   const statusEl = document.getElementById("affilixwp-status");
 
-  if (!buyBtn) return;
+  if (!buyBtn || !statusEl) return;
 
   buyBtn.addEventListener("click", async function () {
-
     if (!window.AffilixWP || !AffilixWP.wp_user_id) {
       alert("Please log in to continue.");
       return;
     }
 
+    // Prevent double clicks
+    buyBtn.disabled = true;
     statusEl.innerText = "Creating subscription...";
 
     try {
-      // 1️⃣ Create Razorpay subscription
+      // 1️⃣ Create Razorpay subscription (server-side)
       const res = await fetch(
         `${AffilixWP.api_url}/razorpay/create-subscription`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            planId: "plan_Rz1Wf5QAFCxCOA", // 🔁 REPLACE WITH REAL PLAN ID
+            planId: "plan_Rz1Wf5QAFCxCOA", // 🔁 your real plan ID
             wpUserId: AffilixWP.wp_user_id,
           }),
         }
@@ -40,9 +40,23 @@ document.addEventListener("DOMContentLoaded", function () {
         subscription_id: subscription.id,
         name: "AffilixWP",
         description: "AffilixWP Subscription",
+
         handler: function () {
-          statusEl.innerText = "Payment successful. Processing...";
+          // ✅ DO NOT WAIT FOR WEBHOOK
+          statusEl.innerText = "Payment successful! Redirecting…";
+
+          setTimeout(() => {
+            window.location.href = "/thank-you/";
+          }, 1500);
         },
+
+        modal: {
+          ondismiss: function () {
+            buyBtn.disabled = false;
+            statusEl.innerText = "Payment cancelled.";
+          },
+        },
+
         theme: {
           color: "#4F46E5",
         },
@@ -53,8 +67,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     } catch (err) {
       console.error(err);
+      buyBtn.disabled = false;
       statusEl.innerText = "Checkout failed.";
-      alert("Something went wrong.");
+      alert("Something went wrong. Please try again.");
     }
   });
 });
