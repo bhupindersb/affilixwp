@@ -5,7 +5,7 @@ class AffilixWP_Commission_API {
 
     public function __construct() {
         add_action('rest_api_init', function () {
-            register_rest_route('affilixwp/v1', '/commission', [
+            register_rest_route('affilixwp/v1', '/record-commission', [
                 'methods'  => 'POST',
                 'callback' => [$this, 'handle_commission'],
                 'permission_callback' => '__return_true',
