@@ -126,41 +126,38 @@ class AffilixWP_Admin_Dashboard {
             </div>
 
             <script>
-            document.addEventListener('DOMContentLoaded', function () {
+                document.addEventListener('DOMContentLoaded', function () {
 
-                const labels = <?php echo wp_json_encode($metrics['days']); ?>;
+                    const labels = <?php echo wp_json_encode($metrics['days']); ?>;
 
-                new Chart(document.getElementById('affilixwpRevenueChart'), {
-                    type: 'line',
-                    data: {
-                        labels,
-                        datasets: [{
-                            label: 'Revenue',
-                            data: <?php echo wp_json_encode($metrics['revenue']); ?>,
-                            borderColor: '#4f46e5',
-                            backgroundColor: 'rgba(79,70,229,0.1)',
-                            tension: 0.3,
-                            fill: true
-                        }]
-                    }
+                    new Chart(document.getElementById('affilixwpCommissionChart'), {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Total Commissions',
+                                data: <?php echo wp_json_encode($metrics['commission']); ?>,
+                                borderColor: '#16a34a',
+                                backgroundColor: 'rgba(22,163,74,0.15)',
+                                tension: 0.3,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                legend: { display: true }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
                 });
-
-                new Chart(document.getElementById('affilixwpCommissionChart'), {
-                    type: 'line',
-                    data: {
-                        labels,
-                        datasets: [{
-                            label: 'Commissions',
-                            data: <?php echo wp_json_encode($metrics['commission']); ?>,
-                            borderColor: '#16a34a',
-                            backgroundColor: 'rgba(22,163,74,0.1)',
-                            tension: 0.3,
-                            fill: true
-                        }]
-                    }
-                });
-            });
             </script>
+
         </div>
         <?php
 
