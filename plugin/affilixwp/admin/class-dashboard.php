@@ -104,5 +104,65 @@ class AffilixWP_Admin_Dashboard {
 
         </div>
         <?php
+
+        $metrics = AffilixWP_Metrics::get_chart_data();
+        ?>
+        <div class="wrap">
+            <h1>AffilixWP Dashboard</h1>
+
+            <!-- KPI BOXES (already present) -->
+            <div class="affilixwp-kpis">
+                <!-- existing boxes -->
+            </div>
+
+            <hr>
+
+            <h2>Performance (Last 30 Days)</h2>
+
+            <div style="max-width:1000px">
+                <canvas id="affilixwpRevenueChart" height="120"></canvas>
+                <br>
+                <canvas id="affilixwpCommissionChart" height="120"></canvas>
+            </div>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+                const labels = <?php echo wp_json_encode($metrics['days']); ?>;
+
+                new Chart(document.getElementById('affilixwpRevenueChart'), {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Revenue',
+                            data: <?php echo wp_json_encode($metrics['revenue']); ?>,
+                            borderColor: '#4f46e5',
+                            backgroundColor: 'rgba(79,70,229,0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    }
+                });
+
+                new Chart(document.getElementById('affilixwpCommissionChart'), {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Commissions',
+                            data: <?php echo wp_json_encode($metrics['commission']); ?>,
+                            borderColor: '#16a34a',
+                            backgroundColor: 'rgba(22,163,74,0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    }
+                });
+            });
+            </script>
+        </div>
+        <?php
+
     }
 }
