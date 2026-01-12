@@ -5,8 +5,8 @@ class AffilixWP_Admin_Menu {
 
     public function __construct() {
         add_action('admin_menu', [$this, 'register_menu']);
+        add_action('admin_post_affilixwp_save_license', [$this, 'handle_license_save']);
         add_action('admin_notices', [$this, 'license_notice']);
-        add_action('admin_init', [$this, 'handle_commission_test']);
     }
 
     public function register_menu() {
@@ -16,7 +16,7 @@ class AffilixWP_Admin_Menu {
             'AffilixWP',
             'manage_options',
             'affilixwp',
-            [$this, 'render_page'],
+            [$this, 'license_page'],
             'dashicons-admin-network'
         );
 
@@ -26,11 +26,15 @@ class AffilixWP_Admin_Menu {
             'License',
             'manage_options',
             'affilixwp-license',
-            [$this, 'render_page']
+            [$this, 'license_page']
         );
     }
 
-    public function render_page() {
+    public function license_page() {
+
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
 
         $status = get_option('affilixwp_license_status', 'inactive');
         ?>
@@ -51,51 +55,55 @@ class AffilixWP_Admin_Menu {
                 <input
                     type="text"
                     name="license_key"
-                    value="<?php echo esc_attr(get_option('affilixwp_license_key')); ?>"
+                    value="<?php echo esc_attr(get_option('affilixwp_license_key', '')); ?>"
                     class="regular-text"
+                    placeholder="AFFILIXWP-XXXX-XXXX-XXXX"
                     required
                 >
 
                 <?php submit_button('Save License'); ?>
             </form>
-            <?php if (get_option('affilixwp_license_status') === 'active') : ?>
-                <hr>
-                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                    <?php wp_nonce_field('affilixwp_deactivate_license', 'affilixwp_deactivate_nonce'); ?>
-                    <input type="hidden" name="action" value="affilixwp_deactivate_license">
-
-                    <?php submit_button('Deactivate License', 'delete'); ?>
-                </form>
-            <?php endif; ?>
-
         </div>
         <?php
     }
 
-    public function license_notice() {
+    public function handle_license_save() {
 
-        if (get_option('affilixwp_license_status') !== 'active') {
-            echo '<div class="notice notice-warning">
-                <p><strong>AffilixWP:</strong> License inactive. Updates are disabled.</p>
-            </div>';
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
         }
-    }
-
-    public function handle_commission_test() {
 
         if (
-            !isset($_POST['test_user_id'], $_POST['test_amount']) ||
-            !check_admin_referer('affilixwp_test_commission')
+            !isset($_POST['affilixwp_license_nonce']) ||
+            !wp_verify_nonce($_POST['affilixwp_license_nonce'], 'affilixwp_save_license')
         ) {
+            wp_die('Security check failed');
+        }
+
+        $license = sanitize_text_field($_POST['license_key']);
+
+        update_option('affilixwp_license_key', $license);
+        delete_transient('affilixwp_license_check');
+
+        AffilixWP_License_Validator::validate(true);
+
+        wp_safe_redirect(
+            add_query_arg(
+                ['license_saved' => '1'],
+                admin_url('admin.php?page=affilixwp-license')
+            )
+        );
+        exit;
+    }
+
+    public function license_notice() {
+
+        if (get_option('affilixwp_license_status') === 'active') {
             return;
         }
 
-        require_once AFFILIXWP_PATH . 'includes/class-commission-engine.php';
-
-        AffilixWP_Commission_Engine::record_purchase(
-            (int) $_POST['test_user_id'],
-            (float) $_POST['test_amount'],
-            'manual_test'
-        );
+        echo '<div class="notice notice-warning">
+            <p><strong>AffilixWP:</strong> License inactive. Updates & commissions are disabled.</p>
+        </div>';
     }
 }
