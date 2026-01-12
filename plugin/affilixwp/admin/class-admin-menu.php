@@ -5,12 +5,12 @@ class AffilixWP_Admin_Menu {
 
     public function __construct() {
         add_action('admin_menu', [$this, 'register_menu']);
-        add_action('admin_init', [$this, 'handle_license_save']);
         add_action('admin_notices', [$this, 'license_notice']);
         add_action('admin_init', [$this, 'handle_commission_test']);
     }
 
     public function register_menu() {
+
         add_menu_page(
             'AffilixWP',
             'AffilixWP',
@@ -19,14 +19,20 @@ class AffilixWP_Admin_Menu {
             [$this, 'render_page'],
             'dashicons-admin-network'
         );
+
+        add_submenu_page(
+            'affilixwp',
+            'License',
+            'License',
+            'manage_options',
+            'affilixwp-license',
+            [$this, 'render_page']
+        );
     }
 
     public function render_page() {
-        $license_key   = get_option('affilixwp_license_key', '');
-        $status        = get_option('affilixwp_license_status', 'inactive');
-        $plan          = get_option('affilixwp_license_plan', '—');
-        $sites_used    = get_option('affilixwp_license_sites', 0);
 
+        $status = get_option('affilixwp_license_status', 'inactive');
         ?>
         <div class="wrap">
             <h1>AffilixWP License</h1>
@@ -34,101 +40,31 @@ class AffilixWP_Admin_Menu {
             <p>
                 <strong>Status:</strong>
                 <span style="color:<?php echo $status === 'active' ? 'green' : 'red'; ?>">
-                    <?php echo ucfirst($status); ?>
+                    <?php echo esc_html(ucfirst($status)); ?>
                 </span>
             </p>
 
-            <p><strong>Plan:</strong> <?php echo esc_html($plan); ?></p>
-            <p><strong>Sites Used:</strong> <?php echo esc_html($sites_used); ?></p>
-
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <?php wp_nonce_field('affilixwp_save_license', 'affilixwp_license_nonce'); ?>
                 <input type="hidden" name="action" value="affilixwp_save_license">
 
-                <?php wp_nonce_field('affilixwp_save_license', 'affilixwp_license_nonce'); ?>
-
-                <input type="text"
+                <input
+                    type="text"
                     name="license_key"
                     value="<?php echo esc_attr(get_option('affilixwp_license_key')); ?>"
                     class="regular-text"
-                    placeholder="Enter license key">
+                    required
+                >
 
                 <?php submit_button('Save License'); ?>
             </form>
-
         </div>
-        <hr>
-        <h2>Manual Commission Test</h2>
-
-        <form method="post">
-            <?php wp_nonce_field('affilixwp_test_commission'); ?>
-
-            <table class="form-table">
-                <tr>
-                    <th>User ID (Buyer)</th>
-                    <td>
-                        <input type="number" name="test_user_id" required />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Purchase Amount</th>
-                    <td>
-                        <input type="number" step="0.01" name="test_amount" required />
-                    </td>
-                </tr>
-            </table>
-
-            <?php submit_button('Simulate Purchase'); ?>
-        </form>
         <?php
     }
 
-
-    public function handle_license_save() {
-        if (
-            !isset($_POST['affilixwp_license_key']) ||
-            !check_admin_referer('affilixwp_license_save')
-        ) {
-            return;
-        }
-
-        $license_key = sanitize_text_field($_POST['affilixwp_license_key']);
-        update_option('affilixwp_license_key', $license_key);
-
-        $response = wp_remote_post(
-            'https://www.beveez.tech/api/license/validate',
-            [
-                'headers' => ['Content-Type' => 'application/json'],
-                'body'    => wp_json_encode([
-                    'licenseKey' => $license_key,
-                    'domain'     => home_url(),
-                ]),
-                'timeout' => 15,
-            ]
-        );
-
-        $data = json_decode(wp_remote_retrieve_body($response), true);
-
-        if (!empty($data['valid'])) {
-            update_option('affilixwp_license_status', 'active');
-            update_option('affilixwp_last_valid', time());
-        } else {
-            update_option('affilixwp_license_status', 'inactive');
-        }
-    }
-
     public function license_notice() {
-        $status     = get_option('affilixwp_license_status', 'inactive');
-        $last_valid = (int) get_option('affilixwp_last_valid', 0);
 
-        // ⏳ Grace period: 7 days
-        if (
-            $status !== 'active' &&
-            (time() - $last_valid) < 7 * DAY_IN_SECONDS
-        ) {
-            return;
-        }
-
-        if ($status !== 'active') {
+        if (get_option('affilixwp_license_status') !== 'active') {
             echo '<div class="notice notice-warning">
                 <p><strong>AffilixWP:</strong> License inactive. Updates are disabled.</p>
             </div>';
@@ -136,6 +72,7 @@ class AffilixWP_Admin_Menu {
     }
 
     public function handle_commission_test() {
+
         if (
             !isset($_POST['test_user_id'], $_POST['test_amount']) ||
             !check_admin_referer('affilixwp_test_commission')
@@ -143,20 +80,12 @@ class AffilixWP_Admin_Menu {
             return;
         }
 
-        $user_id = intval($_POST['test_user_id']);
-        $amount  = floatval($_POST['test_amount']);
-
         require_once AFFILIXWP_PATH . 'includes/class-commission-engine.php';
 
         AffilixWP_Commission_Engine::record_purchase(
-            $user_id,
-            $amount,
+            (int) $_POST['test_user_id'],
+            (float) $_POST['test_amount'],
             'manual_test'
         );
-
-        add_action('admin_notices', function () {
-            echo '<div class="notice notice-success"><p>Commission recorded.</p></div>';
-        });
     }
-
 }
