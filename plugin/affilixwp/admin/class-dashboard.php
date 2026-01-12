@@ -73,7 +73,7 @@ class AffilixWP_Admin_Dashboard {
             <!-- RECENT COMMISSIONS -->
             <h2>Recent Commissions</h2>
 
-            <table class="affx-table">
+            <table class="affx-table widefat striped">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -149,7 +149,6 @@ class AffilixWP_Admin_Dashboard {
                 });
             </script>
 
-        </div>
         <?php
 
         self::render_leaderboard();
@@ -204,7 +203,7 @@ class AffilixWP_Admin_Dashboard {
             </tr>';
         }
 
-        echo '</tbody></table>';
+        echo '</tbody></table></div>';
     }
 
 
