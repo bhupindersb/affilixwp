@@ -23,6 +23,7 @@ require_once AFFILIXWP_PATH . 'includes/class-commission-engine.php';
 require_once AFFILIXWP_PATH . 'includes/class-stripe-webhook.php';
 
 if (is_admin()) {
+    require_once AFFILIXWP_PATH . 'admin/class-dashboard.php';
     require_once AFFILIXWP_PATH . 'admin/class-admin-menu.php';
 }
 

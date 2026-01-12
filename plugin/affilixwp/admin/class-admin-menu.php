@@ -16,8 +16,8 @@ class AffilixWP_Admin_Menu {
             'AffilixWP',
             'manage_options',
             'affilixwp',
-            [$this, 'license_page'],
-            'dashicons-admin-network'
+            ['AffilixWP_Admin_Dashboard', 'render'],
+            'dashicons-networking'
         );
 
         add_submenu_page(
@@ -29,6 +29,7 @@ class AffilixWP_Admin_Menu {
             [$this, 'license_page']
         );
     }
+
 
     public function license_page() {
 
