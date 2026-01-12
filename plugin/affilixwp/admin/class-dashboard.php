@@ -11,19 +11,19 @@ class AffilixWP_Admin_Dashboard {
 
         // KPIs
         $total_revenue = (float) $wpdb->get_var("
-            SELECT SUM(order_amount) FROM $commissions
+            SELECT SUM(order_amount) FROM wp_affilixwp_commissions;
         ");
 
         $total_commissions = (float) $wpdb->get_var("
-            SELECT SUM(commission_amount) FROM $commissions
+            SELECT SUM(commission_amount) FROM wp_affilixwp_commissions;
         ");
 
         $active_affiliates = (int) $wpdb->get_var("
-            SELECT COUNT(DISTINCT referrer_user_id) FROM $referrals
+            SELECT COUNT(DISTINCT referrer_user_id) FROM wp_affilixwp_commissions;
         ");
 
         $total_conversions = (int) $wpdb->get_var("
-            SELECT COUNT(*) FROM $commissions
+            SELECT COUNT(*) FROM wp_affilixwp_commissions;
         ");
 
         // Recent commissions
@@ -161,53 +161,47 @@ class AffilixWP_Admin_Dashboard {
 
         $table = $wpdb->prefix . 'affilixwp_commissions';
 
-        $results = $wpdb->get_results("
+        $leaders = $wpdb->get_results("
             SELECT 
-                referrer_username,
+                referrer_user_id,
                 COUNT(*) AS conversions,
                 SUM(commission_amount) AS total_commission
-            FROM {$table}
-            WHERE purchase_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-            GROUP BY referrer_username
+            FROM {$wpdb->prefix}affilixwp_commissions
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY referrer_user_id
             ORDER BY total_commission DESC
             LIMIT 10
         ");
 
         echo '<h2 style="margin-top:30px;">🏆 Top Affiliates (Last 30 Days)</h2>';
 
-        if (empty($results)) {
+        if (empty($leaders)) {
             echo '<p>No commissions recorded yet.</p>';
             return;
         }
 
         echo '<table class="widefat striped">';
         echo '<thead>
-                <tr>
-                    <th>#</th>
-                    <th>Affiliate</th>
-                    <th>Conversions</th>
-                    <th>Total Commission</th>
-                </tr>
-            </thead>';
-        echo '<tbody>';
+        <tr>
+        <th>#</th>
+        <th>Affiliate</th>
+        <th>Conversions</th>
+        <th>Total Commission</th>
+        </tr>
+        </thead><tbody>';
 
         $rank = 1;
 
-        foreach ($results as $row) {
+        foreach ($leaders as $row) {
+            $user = get_user_by('id', (int)$row->referrer_user_id);
+            $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
 
-            // Try mapping referrer_username → WP user
-            $user = get_user_by('login', $row->referrer_username);
-
-            $display_name = $user
-                ? $user->display_name
-                : esc_html($row->referrer_username);
-
-            echo '<tr>';
-            echo '<td>' . $rank++ . '</td>';
-            echo '<td>' . esc_html($display_name) . '</td>';
-            echo '<td>' . intval($row->conversions) . '</td>';
-            echo '<td><strong>₹' . number_format((float) $row->total_commission, 2) . '</strong></td>';
-            echo '</tr>';
+            echo '<tr>
+                <td>' . $rank++ . '</td>
+                <td>' . esc_html($name) . '</td>
+                <td>' . intval($row->conversions) . '</td>
+                <td><strong>₹' . number_format($row->total_commission, 2) . '</strong></td>
+            </tr>';
         }
 
         echo '</tbody></table>';
