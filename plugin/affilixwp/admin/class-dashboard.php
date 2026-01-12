@@ -38,6 +38,7 @@ class AffilixWP_Admin_Dashboard {
             <p class="description">Affiliate & Multi-Level Commission Overview</p>
 
             <style>
+                .wrap { display: flex; align-items: flex-start; }
                 .affx-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:20px 0; }
                 .affx-card { background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; }
                 .affx-card h2 { margin:0 0 6px; font-size:24px; }
@@ -109,7 +110,7 @@ class AffilixWP_Admin_Dashboard {
         ?>
         <div class="wrap">
             <hr>
-
+            <div class="performance-section">
             <h2>Performance (Last 30 Days)</h2>
 
             <div style="max-width:1000px">
@@ -148,7 +149,7 @@ class AffilixWP_Admin_Dashboard {
 
                 });
             </script>
-
+            </div>
         <?php
 
         self::render_leaderboard();
@@ -172,7 +173,7 @@ class AffilixWP_Admin_Dashboard {
             LIMIT 10
         ");
 
-        echo '<h2 style="margin-top:30px;">🏆 Top Affiliates (Last 30 Days)</h2>';
+        echo '<div class="leaderboard-section"><h2 style="margin-top:30px;">🏆 Top Affiliates (Last 30 Days)</h2>';
 
         if (empty($leaders)) {
             echo '<p>No commissions recorded yet.</p>';
@@ -203,7 +204,7 @@ class AffilixWP_Admin_Dashboard {
             </tr>';
         }
 
-        echo '</tbody></table></div>';
+        echo '</tbody></table></div></div>';
     }
 
 
