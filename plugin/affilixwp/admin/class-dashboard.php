@@ -153,7 +153,7 @@ class AffilixWP_Admin_Dashboard {
         <?php
 
         self::render_leaderboard();
-        
+
     }
 
     private static function render_leaderboard() {
@@ -163,12 +163,12 @@ class AffilixWP_Admin_Dashboard {
 
         $results = $wpdb->get_results("
             SELECT 
-                affiliate_user_id,
-                COUNT(*) as conversions,
-                SUM(commission_amount) as total_commission
+                referrer_username,
+                COUNT(*) AS conversions,
+                SUM(commission_amount) AS total_commission
             FROM {$table}
-            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-            GROUP BY affiliate_user_id
+            WHERE purchase_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY referrer_username
             ORDER BY total_commission DESC
             LIMIT 10
         ");
@@ -192,18 +192,26 @@ class AffilixWP_Admin_Dashboard {
         echo '<tbody>';
 
         $rank = 1;
+
         foreach ($results as $row) {
-            $user = get_user_by('id', $row->affiliate_user_id);
+
+            // Try mapping referrer_username → WP user
+            $user = get_user_by('login', $row->referrer_username);
+
+            $display_name = $user
+                ? $user->display_name
+                : esc_html($row->referrer_username);
 
             echo '<tr>';
             echo '<td>' . $rank++ . '</td>';
-            echo '<td>' . esc_html($user ? $user->display_name : 'User #' . $row->affiliate_user_id) . '</td>';
+            echo '<td>' . esc_html($display_name) . '</td>';
             echo '<td>' . intval($row->conversions) . '</td>';
-            echo '<td><strong>' . '₹' . number_format($row->total_commission, 2) . '</strong></td>';
+            echo '<td><strong>₹' . number_format((float) $row->total_commission, 2) . '</strong></td>';
             echo '</tr>';
         }
 
         echo '</tbody></table>';
     }
+
 
 }
