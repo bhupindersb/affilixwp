@@ -108,13 +108,6 @@ class AffilixWP_Admin_Dashboard {
         $metrics = AffilixWP_Metrics::get_chart_data();
         ?>
         <div class="wrap">
-            <h1>AffilixWP Dashboard</h1>
-
-            <!-- KPI BOXES (already present) -->
-            <div class="affilixwp-kpis">
-                <!-- existing boxes -->
-            </div>
-
             <hr>
 
             <h2>Performance (Last 30 Days)</h2>
