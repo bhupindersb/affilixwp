@@ -38,7 +38,7 @@ class AffilixWP_Admin_Dashboard {
             <p class="description">Affiliate & Multi-Level Commission Overview</p>
 
             <style>
-                .wrap { display: flex; align-items: flex-start; }
+                .flex { display: flex; align-items: flex-start; }
                 .affx-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:20px 0; }
                 .affx-card { background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; }
                 .affx-card h2 { margin:0 0 6px; font-size:24px; }
@@ -108,7 +108,7 @@ class AffilixWP_Admin_Dashboard {
 
         $metrics = AffilixWP_Metrics::get_chart_data();
         ?>
-        <div class="wrap">
+        <div class="wrap flex">
             <hr>
             <div class="performance-section">
             <h2>Performance (Last 30 Days)</h2>
