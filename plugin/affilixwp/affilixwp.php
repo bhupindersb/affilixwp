@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.2.33
+ * Version: 0.2.34
  * Author: AffilixWP
  */
 
@@ -17,7 +17,7 @@ add_action('admin_init', function () {
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.2.33');
+define('AFFILIXWP_VERSION', '0.2.34');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
@@ -116,3 +116,33 @@ add_action('wp_enqueue_scripts', function () {
         'razorpay_key'  => 'rzp_test_Rz1RCeqZkvRXeE', // 🔁 YOUR PUBLIC KEY
     ]);
 });
+
+
+add_action('admin_post_affilixwp_save_license', 'affilixwp_handle_save_license');
+
+function affilixwp_handle_save_license() {
+
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+
+    if (
+        !isset($_POST['affilixwp_license_nonce']) ||
+        !wp_verify_nonce($_POST['affilixwp_license_nonce'], 'affilixwp_save_license')
+    ) {
+        wp_die('Security check failed');
+    }
+
+    $license = sanitize_text_field($_POST['license_key'] ?? '');
+
+    update_option('affilixwp_license_key', $license);
+    update_option('affilixwp_license_status', 'pending');
+
+    wp_redirect(
+        add_query_arg(
+            ['license_saved' => '1'],
+            admin_url('admin.php?page=affilixwp-license')
+        )
+    );
+    exit;
+}

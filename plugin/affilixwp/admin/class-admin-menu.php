@@ -41,25 +41,20 @@ class AffilixWP_Admin_Menu {
             <p><strong>Plan:</strong> <?php echo esc_html($plan); ?></p>
             <p><strong>Sites Used:</strong> <?php echo esc_html($sites_used); ?></p>
 
-            <form method="post">
-                <?php wp_nonce_field('affilixwp_save_license'); ?>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="affilixwp_save_license">
 
-                <table class="form-table">
-                    <tr>
-                        <th scope="row">License Key</th>
-                        <td>
-                            <input
-                                type="text"
-                                name="affilixwp_license_key"
-                                value="<?php echo esc_attr($license_key); ?>"
-                                class="regular-text"
-                            />
-                        </td>
-                    </tr>
-                </table>
+                <?php wp_nonce_field('affilixwp_save_license', 'affilixwp_license_nonce'); ?>
+
+                <input type="text"
+                    name="license_key"
+                    value="<?php echo esc_attr(get_option('affilixwp_license_key')); ?>"
+                    class="regular-text"
+                    placeholder="Enter license key">
 
                 <?php submit_button('Save License'); ?>
             </form>
+
         </div>
         <hr>
         <h2>Manual Commission Test</h2>
