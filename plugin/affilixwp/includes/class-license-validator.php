@@ -52,7 +52,7 @@ class AffilixWP_License_Validator {
             }
 
             if (!empty($data['sites_limit'])) {
-                update_option('affilixwp_license_limit', (int) $data['sites_limit'));
+                update_option('affilixwp_license_limit', (int) $data['sites_limit']);
             }
 
             set_transient('affilixwp_license_check', true, 12 * HOUR_IN_SECONDS);
