@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit;
 class AffilixWP_Metrics {
 
     /**
-     * Get last 30 days revenue + commissions
+     * Get last 30 days commission metrics
      */
     public static function get_chart_data() {
         global $wpdb;
@@ -14,7 +14,6 @@ class AffilixWP_Metrics {
         $results = $wpdb->get_results("
             SELECT 
                 DATE(created_at) as day,
-                SUM(purchase_amount) as revenue,
                 SUM(commission_amount) as commission
             FROM $table
             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
@@ -23,19 +22,16 @@ class AffilixWP_Metrics {
         ", ARRAY_A);
 
         $days = [];
-        $revenue = [];
-        $commission = [];
+        $commissions = [];
 
         foreach ($results as $row) {
             $days[] = $row['day'];
-            $revenue[] = (float) $row['revenue'];
-            $commission[] = (float) $row['commission'];
+            $commissions[] = (float) $row['commission'];
         }
 
         return [
             'days' => $days,
-            'revenue' => $revenue,
-            'commission' => $commission,
+            'commission' => $commissions,
         ];
     }
 }
