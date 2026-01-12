@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.2.36
+ * Version: 0.2.37
  * Author: AffilixWP
  */
 
@@ -17,7 +17,7 @@ add_action('admin_init', function () {
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.2.36');
+define('AFFILIXWP_VERSION', '0.2.37');
 
 require_once AFFILIXWP_PATH . 'includes/class-activator.php';
 require_once AFFILIXWP_PATH . 'includes/class-referrals.php';
@@ -139,3 +139,42 @@ add_action('admin_post_affilixwp_save_license', function () {
     exit;
 });
 
+add_action('admin_post_affilixwp_deactivate_license', function () {
+
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+
+    if (
+        !isset($_POST['affilixwp_deactivate_nonce']) ||
+        !wp_verify_nonce($_POST['affilixwp_deactivate_nonce'], 'affilixwp_deactivate_license')
+    ) {
+        wp_die('Security check failed');
+    }
+
+    $license_key = get_option('affilixwp_license_key');
+
+    if ($license_key) {
+        wp_remote_post(
+            'https://www.beveez.tech/api/license/deactivate',
+            [
+                'timeout' => 15,
+                'headers' => ['Content-Type' => 'application/json'],
+                'body'    => wp_json_encode([
+                    'license_key' => $license_key,
+                    'domain'      => home_url(),
+                ]),
+            ]
+        );
+    }
+
+    // Local cleanup
+    delete_option('affilixwp_license_key');
+    update_option('affilixwp_license_status', 'inactive');
+    delete_transient('affilixwp_license_check');
+
+    wp_safe_redirect(
+        admin_url('admin.php?page=affilixwp-license&license_deactivated=1')
+    );
+    exit;
+});

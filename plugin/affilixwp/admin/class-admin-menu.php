@@ -58,6 +58,16 @@ class AffilixWP_Admin_Menu {
 
                 <?php submit_button('Save License'); ?>
             </form>
+            <?php if (get_option('affilixwp_license_status') === 'active') : ?>
+                <hr>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('affilixwp_deactivate_license', 'affilixwp_deactivate_nonce'); ?>
+                    <input type="hidden" name="action" value="affilixwp_deactivate_license">
+
+                    <?php submit_button('Deactivate License', 'delete'); ?>
+                </form>
+            <?php endif; ?>
+
         </div>
         <?php
     }
