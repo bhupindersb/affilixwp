@@ -113,8 +113,6 @@ class AffilixWP_Admin_Dashboard {
             <h2>Performance (Last 30 Days)</h2>
 
             <div style="max-width:1000px">
-                <canvas id="affilixwpRevenueChart" height="120"></canvas>
-                <br>
                 <canvas id="affilixwpCommissionChart" height="120"></canvas>
             </div>
 
@@ -154,5 +152,58 @@ class AffilixWP_Admin_Dashboard {
         </div>
         <?php
 
+        self::render_leaderboard();
+        
     }
+
+    private static function render_leaderboard() {
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'affilixwp_commissions';
+
+        $results = $wpdb->get_results("
+            SELECT 
+                affiliate_user_id,
+                COUNT(*) as conversions,
+                SUM(commission_amount) as total_commission
+            FROM {$table}
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY affiliate_user_id
+            ORDER BY total_commission DESC
+            LIMIT 10
+        ");
+
+        echo '<h2 style="margin-top:30px;">🏆 Top Affiliates (Last 30 Days)</h2>';
+
+        if (empty($results)) {
+            echo '<p>No commissions recorded yet.</p>';
+            return;
+        }
+
+        echo '<table class="widefat striped">';
+        echo '<thead>
+                <tr>
+                    <th>#</th>
+                    <th>Affiliate</th>
+                    <th>Conversions</th>
+                    <th>Total Commission</th>
+                </tr>
+            </thead>';
+        echo '<tbody>';
+
+        $rank = 1;
+        foreach ($results as $row) {
+            $user = get_user_by('id', $row->affiliate_user_id);
+
+            echo '<tr>';
+            echo '<td>' . $rank++ . '</td>';
+            echo '<td>' . esc_html($user ? $user->display_name : 'User #' . $row->affiliate_user_id) . '</td>';
+            echo '<td>' . intval($row->conversions) . '</td>';
+            echo '<td><strong>' . '₹' . number_format($row->total_commission, 2) . '</strong></td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table>';
+    }
+
 }
