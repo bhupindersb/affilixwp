@@ -9,6 +9,9 @@ class AffilixWP_Admin_Menu {
         add_action('admin_notices', [$this, 'license_notice']);
     }
 
+    /**
+     * Register admin menu
+     */
     public function register_menu() {
 
         add_menu_page(
@@ -30,7 +33,9 @@ class AffilixWP_Admin_Menu {
         );
     }
 
-
+    /**
+     * License page UI
+     */
     public function license_page() {
 
         if (!current_user_can('manage_options')) {
@@ -48,6 +53,12 @@ class AffilixWP_Admin_Menu {
                     <?php echo esc_html(ucfirst($status)); ?>
                 </span>
             </p>
+
+            <?php if (isset($_GET['license_saved'])) : ?>
+                <div class="notice notice-success">
+                    <p>License saved and validated.</p>
+                </div>
+            <?php endif; ?>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <?php wp_nonce_field('affilixwp_save_license', 'affilixwp_license_nonce'); ?>
@@ -68,6 +79,9 @@ class AffilixWP_Admin_Menu {
         <?php
     }
 
+    /**
+     * Handle license save
+     */
     public function handle_license_save() {
 
         if (!current_user_can('manage_options')) {
@@ -81,23 +95,29 @@ class AffilixWP_Admin_Menu {
             wp_die('Security check failed');
         }
 
-        $license = sanitize_text_field($_POST['license_key']);
+        $license = sanitize_text_field($_POST['license_key'] ?? '');
 
         update_option('affilixwp_license_key', $license);
-        delete_transient('affilixwp_license_check');
+        update_option('affilixwp_license_status', 'pending');
 
+        // Clear cache + force validation
+        delete_transient('affilixwp_license_check');
         AffilixWP_License_Validator::validate(true);
 
         wp_safe_redirect(
-            add_query_arg(
-                ['license_saved' => '1'],
-                admin_url('admin.php?page=affilixwp-license')
-            )
+            admin_url('admin.php?page=affilixwp-license&license_saved=1')
         );
         exit;
     }
 
+    /**
+     * Admin notice for inactive license
+     */
     public function license_notice() {
+
+        if (!current_user_can('manage_options')) {
+            return;
+        }
 
         if (get_option('affilixwp_license_status') === 'active') {
             return;
