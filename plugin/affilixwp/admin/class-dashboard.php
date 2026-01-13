@@ -28,35 +28,6 @@ class AffilixWP_Admin_Dashboard {
             $where .= $wpdb->prepare(" AND referrer_user_id = %d", (int) $_GET['affiliate']);
         }
 
-        /* ---------------- CSV EXPORT ---------------- */
-        if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-            header('Content-Type: text/csv');
-            header('Content-Disposition: attachment; filename=affilixwp-commissions.csv');
-
-            $rows = $wpdb->get_results("
-                SELECT * FROM $commissions
-                WHERE $where
-                ORDER BY created_at DESC
-            ");
-
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['Date','Affiliate','Buyer','Order Amount','Commission','Status']);
-
-            foreach ($rows as $r) {
-                fputcsv($out, [
-                    $r->created_at,
-                    $r->referrer_user_id,
-                    $r->referred_user_id,
-                    $r->order_amount,
-                    $r->commission_amount,
-                    $r->status
-                ]);
-            }
-
-            fclose($out);
-            exit;
-        }
-
         /* ---------------- KPIs ---------------- */
         $total_revenue = (float) $wpdb->get_var("SELECT SUM(order_amount) FROM $commissions");
         $total_commissions = (float) $wpdb->get_var("SELECT SUM(commission_amount) FROM $commissions");
@@ -87,6 +58,7 @@ class AffilixWP_Admin_Dashboard {
                 .flex { display: flex; align-items: flex-start; gap:40px; }
                 .affx-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:20px 0; }
                 .affx-card { background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; }
+                .affx-card h2 { margin:0 0 8px 0; font-size:2.3em; }
                 .affx-muted { color:#666; font-size:13px; }
                 .affx-status { padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600; text-transform:capitalize; }
                 .affx-status.pending { background:#FEF3C7; color:#92400E; }
@@ -118,9 +90,10 @@ class AffilixWP_Admin_Dashboard {
                     <button class="button">Filter</button>
                 </form>
 
-                <a class="button button-secondary" href="<?php echo esc_url(add_query_arg('export','csv')); ?>">
+                <a class="button button-secondary" href="<?php echo esc_url(admin_url('admin-post.php?action=affilixwp_export_commissions&' . http_build_query($_GET))); ?>">
                     Export CSV
                 </a>
+
             </div>
 
             <!-- TABLE -->
