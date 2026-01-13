@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.3.25
+ * Version: 0.3.26
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.3.25');
+define('AFFILIXWP_VERSION', '0.3.26');
 
 /**
  * Load core
@@ -24,6 +24,11 @@ require_once AFFILIXWP_PATH . 'includes/class-stripe-webhook.php';
 require_once AFFILIXWP_PATH . 'includes/class-metrics.php';
 require_once AFFILIXWP_PATH . 'includes/class-affiliate-dashboard.php';
 require_once AFFILIXWP_PATH . 'admin/class-payouts.php';
+require_once AFFILIXWP_PATH . 'includes/class-commission-cron.php';
+require_once AFFILIXWP_PATH . 'admin/class-dashboard-actions.php';
+require_once AFFILIXWP_PATH . 'admin/class-admin-payouts.php';
+require_once AFFILIXWP_PATH . 'includes/class-affiliate-payout-profile.php';
+require_once AFFILIXWP_PATH . 'includes/class-affiliate-frontend.php';
 
 
 
@@ -59,6 +64,9 @@ add_action('plugins_loaded', function () {
  */
 add_action('admin_init', function () {
     AffilixWP_License_Validator::validate();
+    if (get_option('affilixwp_approval_delay_days') === false) {
+        add_option('affilixwp_approval_delay_days', 14);
+    }
 });
 
 add_action('admin_enqueue_scripts', function () {
@@ -134,4 +142,16 @@ function affilixwp_export_commissions_csv() {
     fclose($output);
     exit;
 }
+
+AffilixWP_Commission_Cron::init();
+
+if (!wp_next_scheduled('affilixwp_daily_cron')) {
+    wp_schedule_event(time(), 'daily', 'affilixwp_daily_cron');
+}
+
+AffilixWP_Dashboard_Actions::init();
+
+AffilixWP_Affiliate_Payout_Profile::init();
+
+add_shortcode('affilixwp_dashboard', ['AffilixWP_Affiliate_Frontend', 'shortcode']);
 

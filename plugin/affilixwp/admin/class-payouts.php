@@ -32,45 +32,55 @@ class AffilixWP_Admin_Payouts {
         ?>
         <div class="wrap">
             <h1>Affiliate Payouts</h1>
+            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                <input type="hidden" name="action" value="affilixwp_mark_paid">
 
-            <table class="widefat striped">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Affiliate</th>
-                        <th>Order Amount</th>
-                        <th>Commission</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if ($rows): foreach ($rows as $row):
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="affx-select-all"></th>
+                            <th>Date</th>
+                            <th>Affiliate</th>
+                            <th>Order Amount</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($rows): foreach ($rows as $row):
 
-                    $user = get_user_by('id', $row->referrer_user_id);
-                    $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
-                ?>
-                    <tr>
-                        <td><?php echo esc_html($row->created_at); ?></td>
-                        <td><?php echo esc_html($name); ?></td>
-                        <td>₹<?php echo number_format($row->order_amount, 2); ?></td>
-                        <td><strong>₹<?php echo number_format($row->commission_amount, 2); ?></strong></td>
-                        <td><?php echo esc_html(ucfirst($row->status)); ?></td>
-                        <td>
-                            <?php if ($row->status === 'pending'): ?>
-                                <?php $this->action_button($row->id, 'approve', 'Approve'); ?>
-                            <?php endif; ?>
+                        $user = get_user_by('id', $row->referrer_user_id);
+                        $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
+                    ?>
+                        <tr>
+                            <td>
+                                <?php if ($row->status === 'approved') : ?>
+                                    <input type="checkbox" name="commission_ids[]" value="<?php echo (int)$row->id; ?>">
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo esc_html($row->created_at); ?></td>
+                            <td><?php echo esc_html($name); ?></td>
+                            <td>₹<?php echo number_format($row->order_amount, 2); ?></td>
+                            <td><strong>₹<?php echo number_format($row->commission_amount, 2); ?></strong></td>
+                            <td><?php echo esc_html(ucfirst($row->status)); ?></td>
+                            <td>
+                                <?php if ($row->status === 'pending'): ?>
+                                    <?php $this->action_button($row->id, 'approve', 'Approve'); ?>
+                                <?php endif; ?>
 
-                            <?php if ($row->status === 'approved'): ?>
-                                <?php $this->action_button($row->id, 'pay', 'Mark Paid'); ?>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; else: ?>
-                    <tr><td colspan="6">No pending payouts.</td></tr>
-                <?php endif; ?>
-                </tbody>
-            </table>
+                                <?php if ($row->status === 'approved'): ?>
+                                    <?php $this->action_button($row->id, 'pay', 'Mark Paid'); ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; else: ?>
+                        <tr><td colspan="6">No pending payouts.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+                <button class="button button-primary">Mark as Paid</button>
+            </form>
         </div>
         <?php
     }

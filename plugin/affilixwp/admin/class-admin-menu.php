@@ -31,6 +31,16 @@ class AffilixWP_Admin_Menu {
             'affilixwp-license',
             [$this, 'license_page']
         );
+
+        add_submenu_page(
+            'affilixwp',
+            'Payouts',
+            'Payouts',
+            'manage_options',
+            'affilixwp-payouts',
+            ['AffilixWP_Admin_Payouts', 'render']
+        );
+
     }
 
     /**
