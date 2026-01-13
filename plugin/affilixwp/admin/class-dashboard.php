@@ -77,41 +77,53 @@ class AffilixWP_Admin_Dashboard {
             <!-- RECENT COMMISSIONS -->
             <h2>Recent Commissions</h2>
 
-            <?php
-                echo '<table class="widefat striped">';
-                echo '<thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Affiliate</th>
-                    <th>Buyer</th>
-                    <th>Order Amount</th>
-                    <th>Commission</th>
-                    <th>Status</th>
-                </tr>
-                </thead><tbody>';
+                <?php
+                    echo '<table class="widefat striped">';
+                    echo '<thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Affiliate</th>
+                        <th>Buyer</th>
+                        <th>Order Amount</th>
+                        <th>Commission</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead><tbody>';
 
-                foreach ($commissions as $row) {
+                    if (!empty($recent)) {
 
-                    // Affiliate
-                    $affiliate = get_user_by('id', (int) $row->referrer_user_id);
-                    $affiliate_name = $affiliate ? $affiliate->display_name : 'User #' . $row->referrer_user_id;
+                        foreach ($recent as $row) {
 
-                    // Buyer
-                    $buyer = get_user_by('id', (int) $row->referred_user_id);
-                    $buyer_name = $buyer ? $buyer->display_name : 'User #' . $row->referred_user_id;
+                            // Affiliate
+                            $affiliate = get_user_by('id', (int) $row->referrer_user_id);
+                            $affiliate_name = $affiliate
+                                ? $affiliate->display_name
+                                : 'User #' . $row->referrer_user_id;
 
-                    echo '<tr>
-                        <td>' . esc_html(date('Y-m-d', strtotime($row->created_at))) . '</td>
-                        <td><strong>' . esc_html($affiliate_name) . '</strong></td>
-                        <td>' . esc_html($buyer_name) . '</td>
-                        <td>₹' . number_format((float)$row->order_amount, 2) . '</td>
-                        <td>₹' . number_format((float)$row->commission_amount, 2) . '</td>
-                        <td>' . esc_html(ucfirst($row->status)) . '</td>
-                    </tr>';
-                }
+                            // Buyer
+                            $buyer = get_user_by('id', (int) $row->referred_user_id);
+                            $buyer_name = $buyer
+                                ? $buyer->display_name
+                                : 'User #' . $row->referred_user_id;
 
-                echo '</tbody></table>';
-            ?>
+                            echo '<tr>
+                                <td>' . esc_html(date('Y-m-d', strtotime($row->created_at))) . '</td>
+                                <td><strong>' . esc_html($affiliate_name) . '</strong></td>
+                                <td>' . esc_html($buyer_name) . '</td>
+                                <td>₹' . number_format((float)$row->order_amount, 2) . '</td>
+                                <td>₹' . number_format((float)$row->commission_amount, 2) . '</td>
+                                <td>' . esc_html(ucfirst($row->status)) . '</td>
+                            </tr>';
+                        }
+
+                    } else {
+                        echo '<tr><td colspan="6">No commissions recorded yet.</td></tr>';
+                    }
+
+                    echo '</tbody></table>';
+                ?>
+
+            
         </div>
         <?php
 
