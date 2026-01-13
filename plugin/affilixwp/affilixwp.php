@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.3.23
+ * Version: 0.3.24
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.3.23');
+define('AFFILIXWP_VERSION', '0.3.24');
 
 /**
  * Load core
@@ -22,6 +22,7 @@ require_once AFFILIXWP_PATH . 'includes/class-commission-api.php';
 require_once AFFILIXWP_PATH . 'includes/class-commission-engine.php';
 require_once AFFILIXWP_PATH . 'includes/class-stripe-webhook.php';
 require_once AFFILIXWP_PATH . 'includes/class-metrics.php';
+require_once AFFILIXWP_PATH . 'includes/class-affiliate-dashboard.php';
 
 
 if (is_admin()) {
@@ -41,6 +42,8 @@ add_action('plugins_loaded', function () {
 
     new AffilixWP_Commission_API();
     new AffilixWP_Stripe_Webhook();
+    new AffilixWP_Affiliate_Dashboard();
+
 
     if (is_admin()) {
         new AffilixWP_Admin_Menu();
