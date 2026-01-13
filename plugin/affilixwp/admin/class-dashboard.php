@@ -77,35 +77,41 @@ class AffilixWP_Admin_Dashboard {
             <!-- RECENT COMMISSIONS -->
             <h2>Recent Commissions</h2>
 
-            <table class="affx-table widefat striped">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Buyer</th>
-                        <th>Affiliate</th>
-                        <th>Level</th>
-                        <th>Order</th>
-                        <th>Commission</th>
-                        <th>Reference</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($recent): foreach ($recent as $row): ?>
-                        <tr>
-                            <td><?php echo esc_html($row->created_at); ?></td>
-                            <td>#<?php echo esc_html($row->source_user_id); ?></td>
-                            <td>#<?php echo esc_html($row->referrer_user_id); ?></td>
-                            <td>L<?php echo esc_html($row->level); ?></td>
-                            <td>₹ <?php echo number_format($row->order_amount, 2); ?></td>
-                            <td>₹ <?php echo number_format($row->commission_amount, 2); ?></td>
-                            <td><?php echo esc_html($row->reference); ?></td>
-                        </tr>
-                    <?php endforeach; else: ?>
-                        <tr><td colspan="7">No commissions yet.</td></tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+            <?php
+                echo '<table class="widefat striped">';
+                echo '<thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Affiliate</th>
+                    <th>Buyer</th>
+                    <th>Order Amount</th>
+                    <th>Commission</th>
+                    <th>Status</th>
+                </tr>
+                </thead><tbody>';
 
+                foreach ($commissions as $row) {
+
+                    // Affiliate
+                    $affiliate = get_user_by('id', (int) $row->referrer_user_id);
+                    $affiliate_name = $affiliate ? $affiliate->display_name : 'User #' . $row->referrer_user_id;
+
+                    // Buyer
+                    $buyer = get_user_by('id', (int) $row->referred_user_id);
+                    $buyer_name = $buyer ? $buyer->display_name : 'User #' . $row->referred_user_id;
+
+                    echo '<tr>
+                        <td>' . esc_html(date('Y-m-d', strtotime($row->created_at))) . '</td>
+                        <td><strong>' . esc_html($affiliate_name) . '</strong></td>
+                        <td>' . esc_html($buyer_name) . '</td>
+                        <td>₹' . number_format((float)$row->order_amount, 2) . '</td>
+                        <td>₹' . number_format((float)$row->commission_amount, 2) . '</td>
+                        <td>' . esc_html(ucfirst($row->status)) . '</td>
+                    </tr>';
+                }
+
+                echo '</tbody></table>';
+            ?>
         </div>
         <?php
 
