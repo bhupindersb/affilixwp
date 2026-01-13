@@ -5,15 +5,11 @@ class AffilixWP_Admin_Menu {
 
     public function __construct() {
         add_action('admin_menu', [$this, 'register_menu']);
-        add_action('admin_post_affilixwp_save_license', [$this, 'handle_license_save']);
-        add_action('admin_notices', [$this, 'license_notice']);
     }
 
-    /**
-     * Register admin menu
-     */
     public function register_menu() {
 
+        // MAIN MENU
         add_menu_page(
             'AffilixWP',
             'AffilixWP',
@@ -23,6 +19,7 @@ class AffilixWP_Admin_Menu {
             'dashicons-networking'
         );
 
+        // LICENSE PAGE
         add_submenu_page(
             'affilixwp',
             'License',
@@ -32,22 +29,11 @@ class AffilixWP_Admin_Menu {
             [$this, 'license_page']
         );
 
-        add_submenu_page(
-            'affilixwp',
-            'Payouts',
-            'Payouts',
-            'manage_options',
-            'affilixwp-payouts',
-            ['AffilixWP_Admin_Payouts', 'render']
-        );
-
+        // 🚫 DO NOT REGISTER PAYOUTS HERE
+        // Payouts are registered ONLY in AffilixWP_Admin_Payouts
     }
 
-    /**
-     * License page UI
-     */
     public function license_page() {
-
         if (!current_user_can('manage_options')) {
             wp_die('Unauthorized');
         }
@@ -64,12 +50,6 @@ class AffilixWP_Admin_Menu {
                 </span>
             </p>
 
-            <?php if (isset($_GET['license_saved'])) : ?>
-                <div class="notice notice-success">
-                    <p>License saved and validated.</p>
-                </div>
-            <?php endif; ?>
-
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <?php wp_nonce_field('affilixwp_save_license', 'affilixwp_license_nonce'); ?>
                 <input type="hidden" name="action" value="affilixwp_save_license">
@@ -79,7 +59,6 @@ class AffilixWP_Admin_Menu {
                     name="license_key"
                     value="<?php echo esc_attr(get_option('affilixwp_license_key', '')); ?>"
                     class="regular-text"
-                    placeholder="AFFILIXWP-XXXX-XXXX-XXXX"
                     required
                 >
 
@@ -87,54 +66,5 @@ class AffilixWP_Admin_Menu {
             </form>
         </div>
         <?php
-    }
-
-    /**
-     * Handle license save
-     */
-    public function handle_license_save() {
-
-        if (!current_user_can('manage_options')) {
-            wp_die('Unauthorized');
-        }
-
-        if (
-            !isset($_POST['affilixwp_license_nonce']) ||
-            !wp_verify_nonce($_POST['affilixwp_license_nonce'], 'affilixwp_save_license')
-        ) {
-            wp_die('Security check failed');
-        }
-
-        $license = sanitize_text_field($_POST['license_key'] ?? '');
-
-        update_option('affilixwp_license_key', $license);
-        update_option('affilixwp_license_status', 'pending');
-
-        // Clear cache + force validation
-        delete_transient('affilixwp_license_check');
-        AffilixWP_License_Validator::validate(true);
-
-        wp_safe_redirect(
-            admin_url('admin.php?page=affilixwp-license&license_saved=1')
-        );
-        exit;
-    }
-
-    /**
-     * Admin notice for inactive license
-     */
-    public function license_notice() {
-
-        if (!current_user_can('manage_options')) {
-            return;
-        }
-
-        if (get_option('affilixwp_license_status') === 'active') {
-            return;
-        }
-
-        echo '<div class="notice notice-warning">
-            <p><strong>AffilixWP:</strong> License inactive. Updates & commissions are disabled.</p>
-        </div>';
     }
 }
