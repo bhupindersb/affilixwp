@@ -6,8 +6,63 @@ class AffilixWP_Admin_Dashboard {
     public static function render() {
         global $wpdb;
 
+        $per_page = 10;
+        $page = max(1, (int) ($_GET['paged'] ?? 1));
+        $offset = ($page - 1) * $per_page;
+        
+
         $commissions = $wpdb->prefix . 'affilixwp_commissions';
         $referrals   = $wpdb->prefix . 'affilixwp_referrals';
+
+        $where = '1=1';
+
+        if (!empty($_GET['from'])) {
+            $where .= $wpdb->prepare(" AND created_at >= %s", $_GET['from']);
+        }
+        if (!empty($_GET['to'])) {
+            $where .= $wpdb->prepare(" AND created_at <= %s", $_GET['to'] . ' 23:59:59');
+        }
+        if (!empty($_GET['affiliate'])) {
+            $where .= $wpdb->prepare(" AND referrer_user_id = %d", (int) $_GET['affiliate']);
+        }
+
+        if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="affilixwp-commissions.csv"');
+
+            $rows = $wpdb->get_results("
+                SELECT * FROM $commissions
+                WHERE $where
+                ORDER BY created_at DESC
+            ");
+
+            $out = fopen('php://output', 'w');
+
+            fputcsv($out, [
+                'Date',
+                'Affiliate ID',
+                'Buyer ID',
+                'Order Amount',
+                'Commission',
+                'Status'
+            ]);
+
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r->created_at,
+                    $r->referrer_user_id,
+                    $r->referred_user_id,
+                    $r->order_amount,
+                    $r->commission_amount,
+                    $r->status
+                ]);
+            }
+
+            fclose($out);
+            exit;
+        }
+
 
         // KPIs
         $total_revenue = (float) $wpdb->get_var("
@@ -27,11 +82,20 @@ class AffilixWP_Admin_Dashboard {
         ");
 
         // Recent commissions
-        $recent = $wpdb->get_results("
-            SELECT * FROM $commissions
-            ORDER BY created_at DESC
-            LIMIT 10
-        ");
+        $recent = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM $commissions
+                WHERE $where    
+                ORDER BY created_at DESC
+                LIMIT %d OFFSET %d",
+                $per_page,
+                $offset
+            )
+        );
+
+        $total_rows = (int) $wpdb->get_var("SELECT COUNT(*) FROM $commissions");
+        $total_pages = ceil($total_rows / $per_page);
+
         ?>
         <div class="wrap">
             <h1>AffilixWP Dashboard</h1>
@@ -49,6 +113,16 @@ class AffilixWP_Admin_Dashboard {
                 .performance-section { width: 50% }
                 .leaderboard-section { width: 50%; }
                 .performance-section canvas { width: 100% !important; height: auto !important; }
+                .affx-status {
+                    padding: 4px 10px;
+                    border-radius: 999px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-transform: capitalize;
+                }
+                .affx-status.pending { background:#FEF3C7; color:#92400E; }
+                .affx-status.approved { background:#DCFCE7; color:#166534; }
+                .affx-status.paid { background:#DBEAFE; color:#1E40AF; }
             </style>
 
             <!-- KPI CARDS -->
@@ -77,6 +151,22 @@ class AffilixWP_Admin_Dashboard {
             <!-- RECENT COMMISSIONS -->
             <h2>Recent Commissions</h2>
 
+                <form method="get" style="margin:15px 0;">
+                    <input type="hidden" name="page" value="affilixwp">
+
+                    <input type="date" name="from" value="<?php echo esc_attr($_GET['from'] ?? ''); ?>">
+                    <input type="date" name="to" value="<?php echo esc_attr($_GET['to'] ?? ''); ?>">
+
+                    <input type="number" name="affiliate" placeholder="Affiliate ID"
+                        value="<?php echo esc_attr($_GET['affiliate'] ?? ''); ?>">
+
+                    <button class="button">Filter</button>
+                </form>
+
+                <a class="button button-secondary" href="<?php echo esc_url(add_query_arg('export', 'csv')); ?>">
+                    Export CSV
+                </a>
+
                 <?php
                     echo '<table class="widefat striped">';
                     echo '<thead>
@@ -99,6 +189,9 @@ class AffilixWP_Admin_Dashboard {
                             $affiliate_name = $affiliate
                                 ? $affiliate->display_name
                                 : 'User #' . $row->referrer_user_id;
+                            $affiliate_link = $affiliate
+                                ? admin_url('user-edit.php?user_id=' . $affiliate->ID)
+                                : '';
 
                             // Buyer
                             $buyer = get_user_by('id', (int) $row->referred_user_id);
@@ -106,13 +199,29 @@ class AffilixWP_Admin_Dashboard {
                                 ? $buyer->display_name
                                 : 'User #' . $row->referred_user_id;
 
+                            $buyer_link = $buyer
+                                ? admin_url('user-edit.php?user_id=' . $buyer->ID)
+                                : '';    
+
                             echo '<tr>
                                 <td>' . esc_html(date('Y-m-d', strtotime($row->created_at))) . '</td>
-                                <td><strong>' . esc_html($affiliate_name) . '</strong></td>
-                                <td>' . esc_html($buyer_name) . '</td>
+                                <td>
+                                    <a href="<?php echo esc_url($affiliate_link); ?>">
+                                        <strong><?php echo esc_html($affiliate_name); ?></strong>
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="<?php echo esc_url($buyer_link); ?>">
+                                        <strong><?php echo esc_html($buyer_name); ?></strong>
+                                    </a>
+                                </td>
                                 <td>₹' . number_format((float)$row->order_amount, 2) . '</td>
                                 <td>₹' . number_format((float)$row->commission_amount, 2) . '</td>
-                                <td>' . esc_html(ucfirst($row->status)) . '</td>
+                                <td>
+                                    <span class="affx-status <?php echo esc_attr($row->status); ?>">
+                                        <?php echo esc_html($row->status); ?>
+                                    </span>
+                                </td>
                             </tr>';
                         }
 
@@ -121,6 +230,18 @@ class AffilixWP_Admin_Dashboard {
                     }
 
                     echo '</tbody></table>';
+
+                    if ($total_pages > 1) {
+                        echo '<div class="tablenav"><div class="tablenav-pages">';
+
+                        for ($i = 1; $i <= $total_pages; $i++) {
+                            $url = add_query_arg('paged', $i);
+                            echo '<a class="button ' . ($i === $page ? 'button-primary' : '') . '" href="' . esc_url($url) . '">' . $i . '</a> ';
+                        }
+
+                        echo '</div></div>';
+                    }
+
                 ?>
 
             
