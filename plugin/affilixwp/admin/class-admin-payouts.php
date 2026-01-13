@@ -41,7 +41,7 @@ class AffilixWP_Admin_Payouts {
         // ===== COMMISSIONS LIST =====
         $rows = $wpdb->get_results("
             SELECT * FROM $table
-            WHERE status IN ('pending','approved')
+            WHERE status IN ('pending')
             ORDER BY created_at ASC
         ");
         ?>
