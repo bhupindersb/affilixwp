@@ -24,179 +24,128 @@ class AffilixWP_Admin_Payouts {
 
         $table = $wpdb->prefix . 'affilixwp_commissions';
 
+        // ===== SUMMARY TOTALS =====
+        $totals = $wpdb->get_row("
+            SELECT
+                SUM(CASE WHEN status = 'pending' THEN commission_amount ELSE 0 END) AS pending,
+                SUM(CASE WHEN status = 'approved' THEN commission_amount ELSE 0 END) AS approved,
+                SUM(CASE WHEN status = 'paid' THEN commission_amount ELSE 0 END) AS paid
+            FROM $table
+        ");
+
+        $pending  = (float) ($totals->pending ?? 0);
+        $approved = (float) ($totals->approved ?? 0);
+        $paid     = (float) ($totals->paid ?? 0);
+        $balance  = $pending + $approved;
+
+        // ===== COMMISSIONS LIST =====
         $rows = $wpdb->get_results("
             SELECT * FROM $table
             WHERE status IN ('pending','approved')
             ORDER BY created_at ASC
         ");
         ?>
+
         <div class="wrap">
             <h1>Affiliate Payouts</h1>
 
-            <table class="widefat striped">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Affiliate</th>
-                        <th>Order Amount</th>
-                        <th>Commission</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if ($rows): foreach ($rows as $row):
+            <!-- SUMMARY CARDS -->
+            <style>
+                .affx-summary {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 16px;
+                    margin: 20px 0;
+                }
+                .affx-box {
+                    background: #fff;
+                    border: 1px solid #ddd;
+                    padding: 18px;
+                    border-radius: 8px;
+                }
+                .affx-box h2 {
+                    margin: 0;
+                    font-size: 22px;
+                }
+                .affx-muted {
+                    color: #666;
+                    font-size: 13px;
+                    margin-top: 4px;
+                }
+            </style>
 
-                    $user = get_user_by('id', $row->referrer_user_id);
-                    $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
-                ?>
-                    <tr>
-                        <td><?php echo esc_html($row->created_at); ?></td>
-                        <td><?php echo esc_html($name); ?></td>
-                        <td>₹<?php echo number_format($row->order_amount, 2); ?></td>
-                        <td><strong>₹<?php echo number_format($row->commission_amount, 2); ?></strong></td>
-                        <td><?php echo esc_html(ucfirst($row->status)); ?></td>
-                        <td>
-                            <?php if ($row->status === 'pending'): ?>
-                                <?php $this->action_button($row->id, 'approve', 'Approve'); ?>
-                            <?php endif; ?>
-
-                            <?php if ($row->status === 'approved'): ?>
-                                <?php $this->action_button($row->id, 'pay', 'Mark Paid'); ?>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; else: ?>
-                    <tr><td colspan="6">No pending payouts.</td></tr>
-                <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php
-            $table = $wpdb->prefix . 'affilixwp_commissions';
-
-            // ===== SUMMARY TOTALS =====
-            $totals = $wpdb->get_row("
-                SELECT
-                    SUM(CASE WHEN status = 'pending' THEN commission_amount ELSE 0 END) AS pending,
-                    SUM(CASE WHEN status = 'approved' THEN commission_amount ELSE 0 END) AS approved,
-                    SUM(CASE WHEN status = 'paid' THEN commission_amount ELSE 0 END) AS paid
-                FROM $table
-            ");
-
-            $pending  = (float) ($totals->pending ?? 0);
-            $approved = (float) ($totals->approved ?? 0);
-            $paid     = (float) ($totals->paid ?? 0);
-            $balance  = $pending + $approved;
-
-            // ===== COMMISSIONS LIST =====
-            $rows = $wpdb->get_results("
-                SELECT * FROM $table
-                WHERE status IN ('pending','approved')
-                ORDER BY created_at ASC
-            ");
-            ?>
-
-            <div class="wrap">
-                <h1>Affiliate Payouts</h1>
-
-                <!-- SUMMARY CARDS -->
-                <style>
-                    .affx-summary {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                        gap: 16px;
-                        margin: 20px 0;
-                    }
-                    .affx-box {
-                        background: #fff;
-                        border: 1px solid #ddd;
-                        padding: 18px;
-                        border-radius: 8px;
-                    }
-                    .affx-box h2 {
-                        margin: 0;
-                        font-size: 22px;
-                    }
-                    .affx-muted {
-                        color: #666;
-                        font-size: 13px;
-                        margin-top: 4px;
-                    }
-                </style>
-
-                <div class="affx-summary">
-                    <div class="affx-box">
-                        <h2>₹<?php echo number_format($pending, 2); ?></h2>
-                        <div class="affx-muted">Pending</div>
-                    </div>
-
-                    <div class="affx-box">
-                        <h2>₹<?php echo number_format($approved, 2); ?></h2>
-                        <div class="affx-muted">Approved</div>
-                    </div>
-
-                    <div class="affx-box">
-                        <h2>₹<?php echo number_format($paid, 2); ?></h2>
-                        <div class="affx-muted">Paid</div>
-                    </div>
-
-                    <div class="affx-box">
-                        <h2><strong>₹<?php echo number_format($balance, 2); ?></strong></h2>
-                        <div class="affx-muted">Outstanding Balance</div>
-                    </div>
+            <div class="affx-summary">
+                <div class="affx-box">
+                    <h2>₹<?php echo number_format($pending, 2); ?></h2>
+                    <div class="affx-muted">Pending</div>
                 </div>
 
-                <!-- PAYOUT TABLE -->
-                <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                    <input type="hidden" name="action" value="affilixwp_mark_paid">
+                <div class="affx-box">
+                    <h2>₹<?php echo number_format($approved, 2); ?></h2>
+                    <div class="affx-muted">Approved</div>
+                </div>
 
-                    <table class="widefat striped">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Date</th>
-                                <th>Affiliate</th>
-                                <th>Order Amount</th>
-                                <th>Commission</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="affx-box">
+                    <h2>₹<?php echo number_format($paid, 2); ?></h2>
+                    <div class="affx-muted">Paid</div>
+                </div>
 
-                        <?php if ($rows): foreach ($rows as $row):
-
-                            $user = get_user_by('id', $row->referrer_user_id);
-                            $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
-                        ?>
-                            <tr>
-                                <td>
-                                    <?php if ($row->status === 'approved'): ?>
-                                        <input type="checkbox" name="commission_ids[]" value="<?php echo (int)$row->id; ?>">
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo esc_html($row->created_at); ?></td>
-                                <td><?php echo esc_html($name); ?></td>
-                                <td>₹<?php echo number_format($row->order_amount, 2); ?></td>
-                                <td><strong>₹<?php echo number_format($row->commission_amount, 2); ?></strong></td>
-                                <td><?php echo esc_html(ucfirst($row->status)); ?></td>
-                                <td>
-                                    <?php if ($row->status === 'pending'): ?>
-                                        <?php $this->action_button($row->id, 'approve', 'Approve'); ?>
-                                    <?php elseif ($row->status === 'approved'): ?>
-                                        <?php $this->action_button($row->id, 'pay', 'Mark Paid'); ?>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; else: ?>
-                            <tr><td colspan="7">No pending payouts.</td></tr>
-                        <?php endif; ?>
-
-                        </tbody>
-                    </table>
-                </form>
+                <div class="affx-box">
+                    <h2><strong>₹<?php echo number_format($balance, 2); ?></strong></h2>
+                    <div class="affx-muted">Outstanding Balance</div>
+                </div>
             </div>
+
+            <!-- PAYOUT TABLE -->
+            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                <input type="hidden" name="action" value="affilixwp_mark_paid">
+
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Date</th>
+                            <th>Affiliate</th>
+                            <th>Order Amount</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    <?php if ($rows): foreach ($rows as $row):
+
+                        $user = get_user_by('id', $row->referrer_user_id);
+                        $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
+                    ?>
+                        <tr>
+                            <td>
+                                <?php if ($row->status === 'approved'): ?>
+                                    <input type="checkbox" name="commission_ids[]" value="<?php echo (int)$row->id; ?>">
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo esc_html($row->created_at); ?></td>
+                            <td><?php echo esc_html($name); ?></td>
+                            <td>₹<?php echo number_format($row->order_amount, 2); ?></td>
+                            <td><strong>₹<?php echo number_format($row->commission_amount, 2); ?></strong></td>
+                            <td><?php echo esc_html(ucfirst($row->status)); ?></td>
+                            <td>
+                                <?php if ($row->status === 'pending'): ?>
+                                    <?php $this->action_button($row->id, 'approve', 'Approve'); ?>
+                                <?php elseif ($row->status === 'approved'): ?>
+                                    <?php $this->action_button($row->id, 'pay', 'Mark Paid'); ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; else: ?>
+                        <tr><td colspan="7">No pending payouts.</td></tr>
+                    <?php endif; ?>
+
+                    </tbody>
+                </table>
+            </form>
+        </div>
         <?php
     }
 
