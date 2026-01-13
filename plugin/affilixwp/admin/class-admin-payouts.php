@@ -49,6 +49,17 @@ class AffilixWP_Admin_Payouts {
         <div class="wrap">
             <h1>Affiliate Payouts</h1>
 
+            <p style="margin:15px 0;">
+                <a href="<?php echo esc_url(
+                    wp_nonce_url(
+                        admin_url('admin-post.php?action=affilixwp_export_payouts'),
+                        'affilixwp_export_payouts'
+                    )
+                ); ?>" class="button button-primary">
+                    Export Approved Payouts (CSV)
+                </a>
+            </p>
+
             <!-- SUMMARY CARDS -->
             <style>
                 .affx-summary {

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.3.32
+ * Version: 0.3.33
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.3.32');
+define('AFFILIXWP_VERSION', '0.3.33');
 
 /**
  * Load core
@@ -156,3 +156,59 @@ AffilixWP_Affiliate_Payout_Profile::init();
 
 add_shortcode('affilixwp_dashboard', ['AffilixWP_Affiliate_Frontend', 'shortcode']);
 
+add_action('admin_post_affilixwp_export_payouts', 'affilixwp_export_payouts_csv');
+
+function affilixwp_export_payouts_csv() {
+
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+
+    check_admin_referer('affilixwp_export_payouts');
+
+    global $wpdb;
+    $table = $wpdb->prefix . 'affilixwp_commissions';
+
+    // Group approved commissions by affiliate
+    $rows = $wpdb->get_results("
+        SELECT
+            referrer_user_id,
+            SUM(commission_amount) AS total_commission,
+            GROUP_CONCAT(id ORDER BY id ASC) AS commission_ids
+        FROM $table
+        WHERE status = 'approved'
+        GROUP BY referrer_user_id
+        HAVING total_commission > 0
+    ");
+
+    nocache_headers();
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=affilixwp-approved-payouts.csv');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    $output = fopen('php://output', 'w');
+
+    fputcsv($output, [
+        'Affiliate ID',
+        'Affiliate Name',
+        'Total Commission',
+        'Commission IDs'
+    ]);
+
+    foreach ($rows as $row) {
+
+        $user = get_user_by('id', (int)$row->referrer_user_id);
+        $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
+
+        fputcsv($output, [
+            $row->referrer_user_id,
+            $name,
+            number_format((float)$row->total_commission, 2, '.', ''),
+            $row->commission_ids
+        ]);
+    }
+
+    fclose($output);
+    exit;
+}
