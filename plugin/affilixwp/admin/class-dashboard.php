@@ -84,6 +84,7 @@ class AffilixWP_Admin_Dashboard {
             <p class="description">Affiliate & Multi-Level Commission Overview</p>
 
             <style>
+                .flex { display: flex; align-items: flex-start; gap:40px; }
                 .affx-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:20px 0; }
                 .affx-card { background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; }
                 .affx-muted { color:#666; font-size:13px; }
@@ -92,6 +93,9 @@ class AffilixWP_Admin_Dashboard {
                 .affx-status.approved { background:#DCFCE7; color:#166534; }
                 .affx-status.paid { background:#DBEAFE; color:#1E40AF; }
                 .filter-row { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:15px 0; }
+                .performance-section { width: 50% }
+                .leaderboard-section { width: 50%; }
+                .performance-section canvas { width: 100% !important; height: auto !important; }
             </style>
 
             <!-- KPI CARDS -->
@@ -173,44 +177,44 @@ class AffilixWP_Admin_Dashboard {
         <hr>
         <div class="wrap flex">
             <div class="performance-section">
-            <h2>Performance (Last 30 Days)</h2>
+                <h2>Performance (Last 30 Days)</h2>
 
-            <div style="max-width:1000px">
-                <canvas id="affilixwpCommissionChart" height="120"></canvas>
-            </div>
+                <div style="max-width:1000px">
+                    <canvas id="affilixwpCommissionChart" height="120"></canvas>
+                </div>
 
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
 
-                    const labels = <?php echo wp_json_encode($metrics['days']); ?>;
+                        const labels = <?php echo wp_json_encode($metrics['days']); ?>;
 
-                    new Chart(document.getElementById('affilixwpCommissionChart'), {
-                        type: 'line',
-                        data: {
-                            labels,
-                            datasets: [{
-                                label: 'Total Commissions',
-                                data: <?php echo wp_json_encode($metrics['commission']); ?>,
-                                borderColor: '#16a34a',
-                                backgroundColor: 'rgba(22,163,74,0.15)',
-                                tension: 0.3,
-                                fill: true
-                            }]
-                        },
-                        options: {
-                            plugins: {
-                                legend: { display: true }
+                        new Chart(document.getElementById('affilixwpCommissionChart'), {
+                            type: 'line',
+                            data: {
+                                labels,
+                                datasets: [{
+                                    label: 'Total Commissions',
+                                    data: <?php echo wp_json_encode($metrics['commission']); ?>,
+                                    borderColor: '#16a34a',
+                                    backgroundColor: 'rgba(22,163,74,0.15)',
+                                    tension: 0.3,
+                                    fill: true
+                                }]
                             },
-                            scales: {
-                                y: {
-                                    beginAtZero: true
+                            options: {
+                                plugins: {
+                                    legend: { display: true }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
 
-                });
-            </script>
+                    });
+                </script>
             </div>
         <?php
 
