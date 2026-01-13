@@ -46,6 +46,9 @@ class AffilixWP_Admin_Dashboard {
                 table.affx-table { width:100%; border-collapse:collapse; margin-top:20px; }
                 table.affx-table th, table.affx-table td { padding:10px; border-bottom:1px solid #eee; text-align:left; }
                 table.affx-table th { background:#fafafa; }
+                .performance-section { width: 50% }
+                .leaderboard-section { width: 50%; }
+                .performance-section canvas { width: 100% !important; height: auto !important; }
             </style>
 
             <!-- KPI CARDS -->
