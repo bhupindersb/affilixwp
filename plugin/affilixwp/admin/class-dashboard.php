@@ -235,7 +235,7 @@ class AffilixWP_Admin_Dashboard {
             LIMIT 10
         ");
 
-        echo '<h2 style="margin-top:30px;">🏆 Top Affiliates (Last 30 Days)</h2>';
+        echo '<div class="leaderboard-section"><h2 style="margin-top:30px;">🏆 Top Affiliates (Last 30 Days)</h2>';
         echo '<table class="widefat striped"><thead><tr><th>#</th><th>Affiliate</th><th>Conversions</th><th>Total Commission</th></tr></thead><tbody>';
 
         $rank = 1;
@@ -249,6 +249,6 @@ class AffilixWP_Admin_Dashboard {
             </tr>';
         }
 
-        echo '</tbody></table>';
+        echo '</tbody></table></div>';
     }
 }
