@@ -4,11 +4,11 @@ if (!defined('ABSPATH')) exit;
 class AffilixWP_Admin_Payouts {
 
     public function __construct() {
-        add_action('admin_menu', [$this, 'menu']);
+        add_action('admin_menu', [$this, 'register_menu']);
         add_action('admin_post_affilixwp_update_commission', [$this, 'handle_action']);
     }
 
-    public function menu() {
+    public function register_menu() {
         add_submenu_page(
             'affilixwp',
             'Payouts',
