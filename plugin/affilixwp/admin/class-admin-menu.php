@@ -64,6 +64,36 @@ class AffilixWP_Admin_Menu {
 
                 <?php submit_button('Save License'); ?>
             </form>
+            <hr>
+            <h2>Payout Settings</h2>
+
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('affilixwp_settings');
+                do_settings_sections('affilixwp_settings');
+                ?>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Minimum Payout Amount</th>
+                        <td>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="affilixwp_min_payout"
+                                value="<?php echo esc_attr(get_option('affilixwp_min_payout', 500)); ?>"
+                            />
+                            <p class="description">
+                                Affiliates must reach this amount before payouts are processed.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <?php submit_button('Save Payout Settings'); ?>
+            </form>
+
         </div>
         <?php
     }

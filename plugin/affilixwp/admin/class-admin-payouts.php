@@ -120,6 +120,8 @@ class AffilixWP_Admin_Payouts {
                             <th>Order Amount</th>
                             <th>Commission</th>
                             <th>Status</th>
+                            <th>Eligible?</th>
+                            <th>Eligible?</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -141,6 +143,7 @@ class AffilixWP_Admin_Payouts {
                             <td>₹<?php echo number_format($row->order_amount, 2); ?></td>
                             <td><strong>₹<?php echo number_format($row->commission_amount, 2); ?></strong></td>
                             <td><?php echo esc_html(ucfirst($row->status)); ?></td>
+                            <td><?php $eligible = ($balance >= $min_payout) ? 'Yes' : 'No'; echo esc_html($eligible); ?></td>
                             <td>
                                 <?php if ($row->status === 'pending'): ?>
                                     <?php $this->action_button($row->id, 'approve', 'Approve'); ?>
