@@ -41,6 +41,15 @@ class AffilixWP_Admin_Menu {
             ['AffilixWP_Admin_Payouts', 'render']
         );
 
+        add_submenu_page(
+            'affilixwp',
+            'Payout Summary',
+            'Payout Summary',
+            'manage_options',
+            'affilixwp-payout-summary',
+            ['AffilixWP_Admin_Payouts_Summary', 'render']
+        );
+
     }
 
     /**

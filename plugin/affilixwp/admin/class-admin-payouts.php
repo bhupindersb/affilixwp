@@ -1,7 +1,7 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-class AffilixWP_Admin_Payouts {
+class AffilixWP_Admin_Payouts_Summary {
 
     public static function render() {
         global $wpdb;
