@@ -168,6 +168,52 @@ class AffilixWP_Admin_Dashboard {
         </div>
 
         <?php
+        $metrics = AffilixWP_Metrics::get_chart_data();
+        ?>
+        <hr>
+        <div class="wrap flex">
+            <div class="performance-section">
+            <h2>Performance (Last 30 Days)</h2>
+
+            <div style="max-width:1000px">
+                <canvas id="affilixwpCommissionChart" height="120"></canvas>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+
+                    const labels = <?php echo wp_json_encode($metrics['days']); ?>;
+
+                    new Chart(document.getElementById('affilixwpCommissionChart'), {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Total Commissions',
+                                data: <?php echo wp_json_encode($metrics['commission']); ?>,
+                                borderColor: '#16a34a',
+                                backgroundColor: 'rgba(22,163,74,0.15)',
+                                tension: 0.3,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                legend: { display: true }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
+                });
+            </script>
+            </div>
+        <?php
+
         self::render_leaderboard();
     }
 
