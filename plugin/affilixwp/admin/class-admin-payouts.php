@@ -44,6 +44,9 @@ class AffilixWP_Admin_Payouts {
             WHERE status IN ('pending')
             ORDER BY created_at ASC
         ");
+
+        $min_payout = (float) get_option('affilixwp_min_payout', 500);
+
         ?>
 
         <div class="wrap">
@@ -107,6 +110,22 @@ class AffilixWP_Admin_Payouts {
                 </div>
             </div>
 
+            <?php
+
+                // Pre-calc balances per affiliate
+                $balances = [];
+
+                foreach ($rows as $r) {
+                    if (!isset($balances[$r->referrer_user_id])) {
+                        $balances[$r->referrer_user_id] = 0;
+                    }
+
+                    if ($r->status !== 'paid') {
+                        $balances[$r->referrer_user_id] += (float) $r->commission_amount;
+                    }
+                }
+            ?>
+
             <!-- PAYOUT TABLE -->
             <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
                 <input type="hidden" name="action" value="affilixwp_mark_paid">
@@ -143,13 +162,16 @@ class AffilixWP_Admin_Payouts {
                             <td>₹<?php echo number_format($row->order_amount, 2); ?></td>
                             <td><strong>₹<?php echo number_format($row->commission_amount, 2); ?></strong></td>
                             <td><?php echo esc_html(ucfirst($row->status)); ?></td>
-                            <td><?php $eligible = ($balance >= $min_payout) ? 'Yes' : 'No'; echo esc_html($eligible); ?></td>
+                            <td><?php $balance = $balances[$row->referrer_user_id] ?? 0;
+                                $eligible = ($balance >= $min_payout) ? 'Yes' : 'No';   echo esc_html($eligible); ?>
+                            </td>
                             <td>
                                 <?php if ($row->status === 'pending'): ?>
                                     <?php $this->action_button($row->id, 'approve', 'Approve'); ?>
-                                <?php elseif ($row->status === 'approved'): ?>
+                                <?php elseif ($row->status === 'approved' && $balance >= $min_payout): ?>
                                     <?php $this->action_button($row->id, 'pay', 'Mark Paid'); ?>
                                 <?php endif; ?>
+
                             </td>
                         </tr>
                     <?php endforeach; else: ?>
