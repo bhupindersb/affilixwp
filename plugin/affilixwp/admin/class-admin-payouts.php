@@ -140,7 +140,6 @@ class AffilixWP_Admin_Payouts {
                             <th>Commission</th>
                             <th>Status</th>
                             <th>Eligible?</th>
-                            <th>Eligible?</th>
                             <th>Action</th>
                         </tr>
                     </thead>
