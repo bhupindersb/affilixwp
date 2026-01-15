@@ -86,6 +86,10 @@ class AffilixWP_Admin_Payouts {
                     font-size: 13px;
                     margin-top: 4px;
                 }
+
+                .widefat td input {
+                    margin-left: 8px;
+                }
             </style>
 
             <div class="affx-summary">
