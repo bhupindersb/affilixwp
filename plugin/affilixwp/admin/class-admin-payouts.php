@@ -126,12 +126,13 @@ class AffilixWP_Admin_Payouts {
 
             <!-- PAYOUT TABLE -->
             <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                <input type="hidden" name="action" value="affilixwp_mark_paid">
+                <?php wp_nonce_field('affilixwp_bulk_paid'); ?>
+                <input type="hidden" name="action" value="affilixwp_bulk_mark_paid">
 
                 <table class="widefat striped">
                     <thead>
                         <tr>
-                            <th></th>
+                            <th><input type="checkbox" id="affx-select-all"></th>
                             <th>Date</th>
                             <th>Affiliate</th>
                             <th>Order Amount</th>
@@ -147,6 +148,9 @@ class AffilixWP_Admin_Payouts {
 
                         $user = get_user_by('id', $row->referrer_user_id);
                         $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
+
+                        $balance = $balances[$row->referrer_user_id] ?? 0;
+                        $eligible = $balance >= $min_payout;
                     ?>
                         <tr>
                             <td>
@@ -179,6 +183,13 @@ class AffilixWP_Admin_Payouts {
                 </table>
             </form>
         </div>
+        <script>
+            document.getElementById('affx-select-all')?.addEventListener('change', function(e){
+                document.querySelectorAll('input[name="commission_ids[]"]').forEach(cb => {
+                    cb.checked = e.target.checked;
+                });
+            });
+        </script>
         <?php
     }
 
@@ -195,6 +206,7 @@ class AffilixWP_Admin_Payouts {
     }
 
     public function handle_action() {
+
         if (!current_user_can('manage_options')) {
             wp_die('Unauthorized');
         }
@@ -204,38 +216,83 @@ class AffilixWP_Admin_Payouts {
         global $wpdb;
         $table = $wpdb->prefix . 'affilixwp_commissions';
 
-        $id = (int) $_POST['commission_id'];
-        $action = sanitize_text_field($_POST['payout_action']);
+        $action = sanitize_text_field($_POST['payout_action'] ?? '');
 
+        /* ===============================
+        * BULK MARK AS PAID
+        * =============================== */
+        if ($action === 'bulk_pay') {
+
+            if (empty($_POST['commission_ids']) || !is_array($_POST['commission_ids'])) {
+                wp_safe_redirect(admin_url('admin.php?page=affilixwp-payouts'));
+                exit;
+            }
+
+            foreach ($_POST['commission_ids'] as $id) {
+                $id = (int) $id;
+
+                // Only pay APPROVED commissions
+                $wpdb->update(
+                    $table,
+                    [
+                        'status'  => 'paid',
+                        'paid_at' => current_time('mysql'),
+                    ],
+                    [
+                        'id'     => $id,
+                        'status' => 'approved',
+                    ]
+                );
+            }
+
+            wp_safe_redirect(admin_url('admin.php?page=affilixwp-payouts'));
+            exit;
+        }
+
+        /* ===============================
+        * SINGLE COMMISSION ACTIONS
+        * =============================== */
+
+        $id = (int) ($_POST['commission_id'] ?? 0);
+
+        if (!$id) {
+            wp_die('Invalid commission');
+        }
+
+        $commission = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id)
+        );
+
+        if (!$commission) {
+            wp_die('Commission not found');
+        }
+
+        $min_payout = (float) get_option('affilixwp_min_payout', 500);
+
+        // Calculate affiliate balance (excluding paid)
+        $balance = (float) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT SUM(commission_amount)
+                FROM $table
+                WHERE referrer_user_id = %d
+                AND status != 'paid'",
+                $commission->referrer_user_id
+            )
+        );
+
+        /* ===============================
+        * APPROVE
+        * =============================== */
         if ($action === 'approve') {
 
-            // Get commission
-            $commission = $wpdb->get_row(
-                $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id)
-            );
-
-            if (!$commission) {
-                wp_die('Invalid commission');
+            if ($commission->status !== 'pending') {
+                wp_die('Invalid approval request');
             }
-
-            // Minimum payout
-            $min_payout = (float) get_option('affilixwp_min_payout', 500);
-
-            // Calculate affiliate balance
-            $balance = (float) $wpdb->get_var(
-                $wpdb->prepare("
-                    SELECT SUM(commission_amount)
-                    FROM $table
-                    WHERE referrer_user_id = %d
-                    AND status != 'paid'
-                ", $commission->referrer_user_id)
-            );
 
             if ($balance < $min_payout) {
-                wp_die('Affiliate is not eligible for payout yet.');
+                wp_die('Affiliate has not reached minimum payout');
             }
 
-            // Approve
             $wpdb->update(
                 $table,
                 ['status' => 'approved'],
@@ -243,44 +300,31 @@ class AffilixWP_Admin_Payouts {
             );
         }
 
-
+        /* ===============================
+        * PAY (SINGLE)
+        * =============================== */
         if ($action === 'pay') {
 
-            $commission = $wpdb->get_row(
-                $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id)
-            );
-
-            if (!$commission || $commission->status !== 'approved') {
-                wp_die('Invalid payout request');
+            if ($commission->status !== 'approved') {
+                wp_die('Only approved commissions can be paid');
             }
 
-            $min_payout = (float) get_option('affilixwp_min_payout', 500);
-
-            $balance = (float) $wpdb->get_var(
-                $wpdb->prepare("
-                    SELECT SUM(commission_amount)
-                    FROM $table
-                    WHERE referrer_user_id = %d
-                    AND status != 'paid'
-                ", $commission->referrer_user_id)
-            );
-
             if ($balance < $min_payout) {
-                wp_die('Minimum payout not reached.');
+                wp_die('Minimum payout not reached');
             }
 
             $wpdb->update(
                 $table,
                 [
-                    'status' => 'paid',
-                    'paid_at' => current_time('mysql')
+                    'status'  => 'paid',
+                    'paid_at' => current_time('mysql'),
                 ],
                 ['id' => $id]
             );
         }
 
-
         wp_safe_redirect(admin_url('admin.php?page=affilixwp-payouts'));
         exit;
     }
+
 }
