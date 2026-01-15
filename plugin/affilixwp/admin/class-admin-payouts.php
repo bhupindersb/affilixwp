@@ -45,7 +45,7 @@ class AffilixWP_Admin_Payouts {
             ORDER BY created_at ASC
         ");
 
-        $min_payout = (float) get_option('affilixwp_min_payout', 10);
+        $min_payout = (float) get_option('affilixwp_min_payout', 500);
 
         ?>
 
@@ -221,7 +221,7 @@ class AffilixWP_Admin_Payouts {
             }
 
             // Minimum payout
-            $min_payout = (float) get_option('affilixwp_min_payout', 10);
+            $min_payout = (float) get_option('affilixwp_min_payout', 500);
 
             // Calculate affiliate balance
             $balance = (float) $wpdb->get_var(
@@ -256,7 +256,7 @@ class AffilixWP_Admin_Payouts {
                 wp_die('Invalid payout request');
             }
 
-            $min_payout = (float) get_option('affilixwp_min_payout', 10);
+            $min_payout = (float) get_option('affilixwp_min_payout', 500);
 
             $balance = (float) $wpdb->get_var(
                 $wpdb->prepare("
