@@ -185,6 +185,9 @@ class AffilixWP_Admin_Payouts {
 
                     </tbody>
                 </table>
+                <p style="margin-top:15px;">
+                    <button class="button button-primary">Mark Selected as Paid</button>
+                </p>
             </form>
         </div>
         <script>
