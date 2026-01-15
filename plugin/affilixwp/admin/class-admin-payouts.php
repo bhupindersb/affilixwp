@@ -41,7 +41,7 @@ class AffilixWP_Admin_Payouts {
         // ===== COMMISSIONS LIST =====
         $rows = $wpdb->get_results("
             SELECT * FROM $table
-            WHERE status IN ('pending')
+            WHERE status IN ('pending', 'approved')
             ORDER BY created_at ASC
         ");
 
@@ -114,12 +114,10 @@ class AffilixWP_Admin_Payouts {
 
                 // Pre-calc balances per affiliate
                 $balances = [];
-
                 foreach ($rows as $r) {
                     if (!isset($balances[$r->referrer_user_id])) {
                         $balances[$r->referrer_user_id] = 0;
                     }
-
                     if ($r->status !== 'paid') {
                         $balances[$r->referrer_user_id] += (float) $r->commission_amount;
                     }
