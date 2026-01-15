@@ -186,7 +186,8 @@ class AffilixWP_Admin_Payouts {
                     </tbody>
                 </table>
                 <p style="margin-top:15px;">
-                    <button class="button button-primary">Mark Selected as Paid</button>
+                    <button type="submit" name="payout_action" value="bulk_pay" class="button button-primary">Mark Selected as Paid</button>
+
                 </p>
             </form>
         </div>
@@ -225,9 +226,9 @@ class AffilixWP_Admin_Payouts {
 
         $action = sanitize_text_field($_POST['payout_action'] ?? '');
 
-        /* ===============================
-        * BULK MARK AS PAID
-        * =============================== */
+        /* =====================================================
+        * BULK PAYOUT — MUST RUN FIRST
+        * ===================================================== */
         if ($action === 'bulk_pay') {
 
             if (empty($_POST['commission_ids']) || !is_array($_POST['commission_ids'])) {
@@ -238,7 +239,7 @@ class AffilixWP_Admin_Payouts {
             foreach ($_POST['commission_ids'] as $id) {
                 $id = (int) $id;
 
-                // Only pay APPROVED commissions
+                // Pay ONLY approved commissions
                 $wpdb->update(
                     $table,
                     [
@@ -256,12 +257,11 @@ class AffilixWP_Admin_Payouts {
             exit;
         }
 
-        /* ===============================
-        * SINGLE COMMISSION ACTIONS
-        * =============================== */
+        /* =====================================================
+        * SINGLE ROW ACTIONS
+        * ===================================================== */
 
         $id = (int) ($_POST['commission_id'] ?? 0);
-
         if (!$id) {
             wp_die('Invalid commission');
         }
@@ -276,7 +276,6 @@ class AffilixWP_Admin_Payouts {
 
         $min_payout = (float) get_option('affilixwp_min_payout', 500);
 
-        // Calculate affiliate balance (excluding paid)
         $balance = (float) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT SUM(commission_amount)
@@ -287,13 +286,11 @@ class AffilixWP_Admin_Payouts {
             )
         );
 
-        /* ===============================
-        * APPROVE
-        * =============================== */
+        /* ===== APPROVE ===== */
         if ($action === 'approve') {
 
             if ($commission->status !== 'pending') {
-                wp_die('Invalid approval request');
+                wp_die('Invalid approval');
             }
 
             if ($balance < $min_payout) {
@@ -307,9 +304,7 @@ class AffilixWP_Admin_Payouts {
             );
         }
 
-        /* ===============================
-        * PAY (SINGLE)
-        * =============================== */
+        /* ===== PAY SINGLE ===== */
         if ($action === 'pay') {
 
             if ($commission->status !== 'approved') {
