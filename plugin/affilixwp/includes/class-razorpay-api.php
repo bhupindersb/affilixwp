@@ -1,62 +1,81 @@
 <?php
-public function create_subscription(WP_REST_Request $request) {
+if (!defined('ABSPATH')) exit;
 
-    $plan_id = $request->get_param('planId');
-    $user_id = (int) $request->get_param('wpUserId');
+class AffilixWP_Razorpay_API {
 
-    if (!$plan_id || !$user_id) {
-        return new WP_REST_Response([
-            'error' => 'Missing parameters'
-        ], 400);
+    public function __construct() {
+        add_action('rest_api_init', [$this, 'register_routes']);
     }
 
-    $key    = get_option('affilixwp_razorpay_key');
-    $secret = get_option('affilixwp_razorpay_secret');
+    public function register_routes() {
 
-    if (!$key || !$secret) {
-        return new WP_REST_Response([
-            'error' => 'Razorpay keys not configured'
-        ], 500);
+        register_rest_route('affilixwp/v1', '/razorpay/create-subscription', [
+            'methods'  => 'POST',
+            'callback' => [$this, 'create_subscription'],
+            'permission_callback' => function () {
+                return is_user_logged_in();
+            }
+        ]);
     }
 
-    $payload = [
-        'plan_id'         => $plan_id,
-        'total_count'     => 12, // or 0 for infinite
-        'customer_notify' => 1,
-        'notes' => [
-            'wp_user_id' => $user_id
-        ]
-    ];
+    public function create_subscription(WP_REST_Request $request) {
 
-    $response = wp_remote_post(
-        'https://api.razorpay.com/v1/subscriptions',
-        [
-            'headers' => [
-                'Authorization' => 'Basic ' . base64_encode("$key:$secret"),
-                'Content-Type'  => 'application/json',
-            ],
-            'body'    => wp_json_encode($payload),
-            'timeout' => 30,
-        ]
-    );
+        $plan_id = $request->get_param('planId');
+        $user_id = (int) $request->get_param('wpUserId');
 
-    if (is_wp_error($response)) {
+        if (!$plan_id || !$user_id) {
+            return new WP_REST_Response([
+                'error' => 'Missing parameters'
+            ], 400);
+        }
+
+        $key    = get_option('affilixwp_razorpay_key');
+        $secret = get_option('affilixwp_razorpay_secret');
+
+        if (!$key || !$secret) {
+            return new WP_REST_Response([
+                'error' => 'Razorpay keys not configured'
+            ], 500);
+        }
+
+        $payload = [
+            'plan_id'         => $plan_id,
+            'total_count'     => 12, // 0 = infinite
+            'customer_notify' => 1,
+            'notes' => [
+                'wp_user_id' => $user_id
+            ]
+        ];
+
+        $response = wp_remote_post(
+            'https://api.razorpay.com/v1/subscriptions',
+            [
+                'headers' => [
+                    'Authorization' => 'Basic ' . base64_encode("$key:$secret"),
+                    'Content-Type'  => 'application/json',
+                ],
+                'body'    => wp_json_encode($payload),
+                'timeout' => 30,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return new WP_REST_Response([
+                'error' => $response->get_error_message()
+            ], 500);
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (empty($body['id'])) {
+            return new WP_REST_Response([
+                'error' => 'Failed to create Razorpay subscription',
+                'razorpay_response' => $body
+            ], 500);
+        }
+
         return new WP_REST_Response([
-            'error' => $response->get_error_message()
-        ], 500);
+            'id' => $body['id']
+        ], 200);
     }
-
-    $body = json_decode(wp_remote_retrieve_body($response), true);
-
-    if (empty($body['id'])) {
-        return new WP_REST_Response([
-            'error' => 'Failed to create Razorpay subscription',
-            'razorpay_response' => $body
-        ], 500);
-    }
-
-    return new WP_REST_Response([
-        'id' => $body['id']
-    ], 200);
 }
-
