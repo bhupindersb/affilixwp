@@ -90,6 +90,8 @@ class AffilixWP_Razorpay_API {
             return new WP_REST_Response([
                 'error' => 'Razorpay subscription creation failed',
                 'status' => $status,
+                'razorpay_error_code' => $body['error']['code'] ?? null,
+                'razorpay_error_desc' => $body['error']['description'] ?? null,
                 'razorpay_response' => $body
             ], 500);
         }
