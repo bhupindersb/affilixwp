@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   buyBtn.addEventListener("click", async function () {
 
-    if (!window.AffilixWP || !AffilixWP.wp_user_id) {
+    if (!window.AffilixWP || parseInt(AffilixWP.wp_user_id) <= 0) {
       alert("Please log in to continue.");
       return;
     }
