@@ -43,10 +43,45 @@ document.addEventListener("DOMContentLoaded", function () {
         subscription_id: data.id,
         name: "AffilixWP",
         description: "AffilixWP Subscription",
-        handler: function (response) {
-          console.log("Payment success", response);
-          statusEl.innerText = "Payment successful!";
+
+        handler: async function (response) {
+
+          statusEl.innerText = "Verifying payment...";
+
+          try {
+            const verifyRes = await fetch(
+              `${AffilixWP.api_url}/razorpay/verify-payment`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-WP-Nonce": AffilixWP.nonce
+                },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_subscription_id: response.razorpay_subscription_id,
+                  razorpay_signature: response.razorpay_signature
+                })
+              }
+            );
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyData.success) {
+              alert("Payment verification failed. Please contact support.");
+              statusEl.innerText = "Verification failed";
+              return;
+            }
+
+            console.log("Payment verified");
+            statusEl.innerText = "Payment successful!";
+
+          } catch (e) {
+            console.error("Verification error", e);
+            alert("Verification failed.");
+          }
         },
+
         theme: { color: "#4F46E5" },
       };
 

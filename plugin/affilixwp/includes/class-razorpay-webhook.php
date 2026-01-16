@@ -12,7 +12,7 @@ class AffilixWP_Razorpay_Webhook {
         register_rest_route('affilixwp/v1', '/razorpay/webhook', [
             'methods'  => 'POST',
             'callback' => [$this, 'handle'],
-            'permission_callback' => '__return_true' // signature verified manually
+            'permission_callback' => '__return_true'
         ]);
     }
 
@@ -72,9 +72,24 @@ class AffilixWP_Razorpay_Webhook {
         $sub = $event['payload']['subscription']['entity'];
         $wp_user_id = $sub['notes']['wp_user_id'] ?? null;
 
-        if ($wp_user_id) {
-            update_user_meta($wp_user_id, 'affilixwp_last_payment', current_time('mysql'));
+        if (!$wp_user_id) return;
+
+        // 🔒 Idempotency: avoid double processing
+        $processed_key = 'affilixwp_charge_' . $sub['id'] . '_' . $sub['current_start'];
+
+        if (get_user_meta($wp_user_id, $processed_key, true)) {
+            return;
         }
+
+        update_user_meta($wp_user_id, $processed_key, 1);
+
+        update_user_meta($wp_user_id, 'affilixwp_last_payment', current_time('mysql'));
+        update_user_meta($wp_user_id, 'affilixwp_subscription_status', 'paid');
+
+        /**
+         * 🔓 Unlock commissions ONLY after confirmed charge
+         */
+        do_action('affilixwp_subscription_paid', $wp_user_id);
     }
 
     private function subscription_cancelled($event) {
