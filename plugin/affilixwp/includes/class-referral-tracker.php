@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 class AffilixWP_Referral_Tracker {
 
-    const COOKIE = 'affilixwp_referrer';
+    const COOKIE = 'affilixwp_ref_code';
 
     public function __construct() {
         add_action('init', [$this, 'capture_referral']);
@@ -11,7 +11,7 @@ class AffilixWP_Referral_Tracker {
     }
 
     /**
-     * Capture ?ref={USER_ID}
+     * Capture ?ref=REFERRAL_CODE
      */
     public function capture_referral() {
 
@@ -19,25 +19,26 @@ class AffilixWP_Referral_Tracker {
             return;
         }
 
-        $referrer_user_id = (int) $_GET['ref'];
+        $ref_code = sanitize_text_field($_GET['ref']);
 
-        if ($referrer_user_id <= 0 || !get_user_by('id', $referrer_user_id)) {
+        // Basic sanity check
+        if (strlen($ref_code) < 5) {
             return;
         }
 
         setcookie(
             self::COOKIE,
-            $referrer_user_id,
+            $ref_code,
             time() + (30 * DAY_IN_SECONDS),
             COOKIEPATH,
             COOKIE_DOMAIN
         );
 
-        $_COOKIE[self::COOKIE] = $referrer_user_id;
+        $_COOKIE[self::COOKIE] = $ref_code;
     }
 
     /**
-     * Create referral rows on registration
+     * Create referral records on registration
      */
     public function record_referral($new_user_id) {
 
@@ -47,13 +48,28 @@ class AffilixWP_Referral_Tracker {
 
         global $wpdb;
 
-        $referrer_user_id = (int) $_COOKIE[self::COOKIE];
+        $ref_code = sanitize_text_field($_COOKIE[self::COOKIE]);
 
-        if ($referrer_user_id <= 0 || $referrer_user_id === $new_user_id) {
+        $affiliates = $wpdb->prefix . 'affilixwp_affiliates';
+        $referrals  = $wpdb->prefix . 'affilixwp_referrals';
+
+        // Find referrer by referral_code
+        $affiliate = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM $affiliates WHERE referral_code = %s AND status = 'active'",
+                $ref_code
+            )
+        );
+
+        if (!$affiliate) {
             return;
         }
 
-        $referrals = $wpdb->prefix . 'affilixwp_referrals';
+        $referrer_user_id = (int) $affiliate->user_id;
+
+        if ($referrer_user_id === $new_user_id) {
+            return;
+        }
 
         // Prevent duplicate
         $exists = $wpdb->get_var(

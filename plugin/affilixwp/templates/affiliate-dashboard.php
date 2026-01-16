@@ -40,10 +40,15 @@ $commissions = $wpdb->get_results(
 );
 
 // Referral link
-$referral_link = add_query_arg(
-    ['ref' => $user_id],
-    home_url('/')
+$affiliate = $wpdb->get_row(
+    $wpdb->prepare(
+        "SELECT referral_code FROM {$wpdb->prefix}affilixwp_affiliates WHERE user_id = %d",
+        get_current_user_id()
+    )
 );
+
+$ref_url = home_url('/?ref=' . $affiliate->referral_code);
+
 ?>
 
 <style>
@@ -84,7 +89,7 @@ $referral_link = add_query_arg(
 
     <!-- REFERRAL LINK -->
     <h2 style="margin-top:30px;">Your Referral Link</h2>
-    <div class="affx-link"><?php echo esc_url($referral_link); ?></div>
+    <div class="affx-link"><?php echo esc_url($ref_url); ?></div>
 
     <!-- COMMISSIONS -->
     <h2 style="margin-top:30px;">Commission History</h2>
