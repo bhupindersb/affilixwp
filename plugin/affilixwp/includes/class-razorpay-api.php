@@ -36,30 +36,70 @@ class AffilixWP_Razorpay_API {
 
     public function create_subscription(WP_REST_Request $r) {
 
-        $plan = get_option('affilixwp_razorpay_plan_id');
-        $key  = get_option('affilixwp_razorpay_key');
-        $sec  = get_option('affilixwp_razorpay_secret');
-        $uid  = get_current_user_id();
+        $uid   = get_current_user_id();
+        $plan  = get_option('affilixwp_razorpay_plan_id');
+        $key   = get_option('affilixwp_razorpay_key');
+        $sec   = get_option('affilixwp_razorpay_secret');
 
-        $res = wp_remote_post(
+        // 🔴 Validate configuration
+        if (!$plan || !$key || !$sec) {
+            return new WP_REST_Response([
+                'error' => 'Razorpay configuration missing',
+                'debug' => [
+                    'plan' => (bool) $plan,
+                    'key'  => (bool) $key,
+                    'sec'  => (bool) $sec
+                ]
+            ], 500);
+        }
+
+        $payload = [
+            'plan_id'         => $plan,
+            'total_count'     => 0,
+            'customer_notify' => 1,
+            'notes' => [
+                'wp_user_id' => $uid
+            ]
+        ];
+
+        $response = wp_remote_post(
             'https://api.razorpay.com/v1/subscriptions',
             [
                 'headers' => [
                     'Authorization' => 'Basic ' . base64_encode("$key:$sec"),
                     'Content-Type'  => 'application/json'
                 ],
-                'body' => wp_json_encode([
-                    'plan_id' => $plan,
-                    'total_count' => 0,
-                    'customer_notify' => 1,
-                    'notes' => ['wp_user_id' => $uid]
-                ])
+                'body'    => wp_json_encode($payload),
+                'timeout' => 30
             ]
         );
 
-        $body = json_decode(wp_remote_retrieve_body($res), true);
-        return new WP_REST_Response(['id' => $body['id']], 200);
+        // 🔴 Network / HTTP error
+        if (is_wp_error($response)) {
+            return new WP_REST_Response([
+                'error' => 'Razorpay request failed',
+                'message' => $response->get_error_message()
+            ], 500);
+        }
+
+        $status = wp_remote_retrieve_response_code($response);
+        $body   = json_decode(wp_remote_retrieve_body($response), true);
+
+        // 🔴 Razorpay error response
+        if ($status !== 200 || empty($body['id'])) {
+            return new WP_REST_Response([
+                'error' => 'Razorpay subscription creation failed',
+                'status' => $status,
+                'razorpay_response' => $body
+            ], 500);
+        }
+
+        // ✅ SUCCESS
+        return new WP_REST_Response([
+            'id' => $body['id']
+        ], 200);
     }
+
 
     public function verify_payment(WP_REST_Request $r) {
 
