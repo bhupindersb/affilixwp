@@ -74,22 +74,33 @@ class AffilixWP_Razorpay_Webhook {
 
         if (!$wp_user_id) return;
 
-        // 🔒 Idempotency: avoid double processing
-        $processed_key = 'affilixwp_charge_' . $sub['id'] . '_' . $sub['current_start'];
+        /**
+         * 🔒 Idempotency (one commission per billing cycle)
+         */
+        $reference = sprintf(
+            'razorpay_sub_%s_%s',
+            $sub['id'],
+            $sub['current_start']
+        );
 
-        if (get_user_meta($wp_user_id, $processed_key, true)) {
+        // Subscription amount (from plan or charge)
+        $amount = ($sub['plan']['amount'] ?? 0) / 100;
+
+        if ($amount <= 0) {
             return;
         }
 
-        update_user_meta($wp_user_id, $processed_key, 1);
+        /**
+         * 🔥 RECORD COMMISSION (CANONICAL)
+         */
+        AffilixWP_Commission_Engine::record_purchase(
+            (int) $wp_user_id,
+            (float) $amount,
+            $reference
+        );
 
         update_user_meta($wp_user_id, 'affilixwp_last_payment', current_time('mysql'));
         update_user_meta($wp_user_id, 'affilixwp_subscription_status', 'paid');
-
-        /**
-         * 🔓 Unlock commissions ONLY after confirmed charge
-         */
-        do_action('affilixwp_subscription_paid', $wp_user_id);
     }
 
     private function subscription_cancelled($event) {

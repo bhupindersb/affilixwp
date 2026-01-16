@@ -3,6 +3,9 @@ if (!defined('ABSPATH')) exit;
 
 class AffilixWP_Commission_Engine {
 
+    /**
+     * Canonical commission recorder
+     */
     public static function record_purchase($buyer_user_id, $order_amount, $reference) {
         global $wpdb;
 
@@ -31,7 +34,12 @@ class AffilixWP_Commission_Engine {
             )
         );
 
+        if (empty($chain)) {
+            return;
+        }
+
         foreach ($chain as $ref) {
+
             $rate = ($ref->level == 1) ? 0.10 : 0.05;
             $commission = round($order_amount * $rate, 2);
 
