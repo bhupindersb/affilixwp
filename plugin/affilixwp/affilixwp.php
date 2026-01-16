@@ -28,14 +28,16 @@ require_once AFFILIXWP_PATH . 'admin/class-dashboard-actions.php';
 require_once AFFILIXWP_PATH . 'includes/class-affiliate-payout-profile.php';
 require_once AFFILIXWP_PATH . 'includes/class-affiliate-frontend.php';
 require_once AFFILIXWP_PATH . 'includes/class-razorpay-api.php';
+require_once AFFILIXWP_PATH . 'includes/class-razorpay-webhook.php';
 
-
-
-
+/**
+ * Load admin only
+ */
 if (is_admin()) {
     require_once AFFILIXWP_PATH . 'admin/class-dashboard.php';
     require_once AFFILIXWP_PATH . 'admin/class-admin-menu.php';
     require_once AFFILIXWP_PATH . 'admin/class-admin-payouts.php';
+    require_once AFFILIXWP_PATH . 'admin/class-razorpay-settings.php';
 }
 
 
@@ -53,11 +55,13 @@ add_action('plugins_loaded', function () {
     new AffilixWP_Stripe_Webhook();
     new AffilixWP_Affiliate_Dashboard();
     new AffilixWP_Razorpay_API();
+    new AffilixWP_Razorpay_Webhook();
 
     if (is_admin()) {
         new AffilixWP_Admin_Menu();
         new AffilixWP_Admin_Payouts();
         new AffilixWP_Updater(__FILE__);
+        AffilixWP_Razorpay_Settings::init();
     }
 
 });
