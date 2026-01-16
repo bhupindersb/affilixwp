@@ -55,7 +55,7 @@ class AffilixWP_Razorpay_API {
 
         $payload = [
             'plan_id'         => $plan,
-            'total_count'     => 0,
+            'total_count'     => 12,
             'customer_notify' => 1,
             'notes' => [
                 'wp_user_id' => $uid
