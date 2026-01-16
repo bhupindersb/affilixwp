@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit;
 class AffilixWP_Affiliates {
 
     public function __construct() {
-        add_action('user_register', [$this, 'create_affiliate'], 10, 1);
+        add_action('user_register', [$this, 'create_affiliate'], 5);
     }
 
     public function create_affiliate($user_id) {
@@ -12,7 +12,6 @@ class AffilixWP_Affiliates {
 
         $table = $wpdb->prefix . 'affilixwp_affiliates';
 
-        // Safety: avoid duplicates
         $exists = $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT id FROM $table WHERE user_id = %d",
@@ -24,17 +23,14 @@ class AffilixWP_Affiliates {
             return;
         }
 
-        // Generate referral code
-        $referral_code = strtoupper(wp_generate_password(8, false, false));
-
         $wpdb->insert(
             $table,
             [
-                'user_id'       => $user_id,
-                'referral_code' => $referral_code,
-                'status'        => 'active',
+                'user_id'    => $user_id,
+                'status'     => 'active',
+                'created_at' => current_time('mysql'),
             ],
-            ['%d', '%s', '%s']
+            ['%d','%s','%s']
         );
     }
 }
