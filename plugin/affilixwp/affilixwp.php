@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.3.46
+ * Version: 0.3.47
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.3.46');
+define('AFFILIXWP_VERSION', '0.3.47');
 
 /**
  * Load core
@@ -72,7 +72,7 @@ add_action('admin_init', function () {
 
 function affilixwp_enqueue_checkout_scripts() {
 
-    // Razorpay Checkout (MANDATORY)
+    // Razorpay Checkout
     wp_enqueue_script(
         'razorpay-checkout',
         'https://checkout.razorpay.com/v1/checkout.js',
@@ -81,17 +81,28 @@ function affilixwp_enqueue_checkout_scripts() {
         true
     );
 
-    // Your checkout.js (depends on Razorpay)
+    // Your checkout.js
     wp_enqueue_script(
         'affilixwp-checkout',
         plugin_dir_url(__FILE__) . 'assets/js/checkout.js',
-        ['razorpay-checkout'], // IMPORTANT dependency
+        ['razorpay-checkout'],
         '1.0',
         true
     );
 
+    // 👇 THIS IS CRITICAL
+    wp_localize_script(
+        'affilixwp-checkout', // MUST MATCH SCRIPT HANDLE
+        'AffilixWP',          // MUST MATCH JS VARIABLE
+        [
+            'wp_user_id'   => get_current_user_id(),
+            'api_url'      => rest_url('affilixwp/v1'),
+            'razorpay_key' => get_option('affilixwp_razorpay_key'),
+        ]
+    );
 }
 add_action('wp_enqueue_scripts', 'affilixwp_enqueue_checkout_scripts');
+
 
 
 add_action('admin_enqueue_scripts', function () {
