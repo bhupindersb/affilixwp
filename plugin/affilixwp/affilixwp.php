@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.3.45
+ * Version: 0.3.46
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.3.45');
+define('AFFILIXWP_VERSION', '0.3.46');
 
 /**
  * Load core
@@ -69,6 +69,30 @@ add_action('admin_init', function () {
         add_option('affilixwp_approval_delay_days', 14);
     }
 });
+
+function affilixwp_enqueue_checkout_scripts() {
+
+    // Razorpay Checkout (MANDATORY)
+    wp_enqueue_script(
+        'razorpay-checkout',
+        'https://checkout.razorpay.com/v1/checkout.js',
+        [],
+        null,
+        true
+    );
+
+    // Your checkout.js (depends on Razorpay)
+    wp_enqueue_script(
+        'affilixwp-checkout',
+        plugin_dir_url(__FILE__) . 'assets/js/checkout.js',
+        ['razorpay-checkout'], // IMPORTANT dependency
+        '1.0',
+        true
+    );
+
+}
+add_action('wp_enqueue_scripts', 'affilixwp_enqueue_checkout_scripts');
+
 
 add_action('admin_enqueue_scripts', function () {
     wp_enqueue_script(
