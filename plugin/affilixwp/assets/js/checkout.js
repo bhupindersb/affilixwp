@@ -19,7 +19,10 @@ document.addEventListener("DOMContentLoaded", function () {
         `${AffilixWP.api_url}/razorpay/create-subscription`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-WP-Nonce": AffilixWP.nonce
+          },
           body: JSON.stringify({
             planId: "plan_Rz1Wf5QAFCxCOA",
             wpUserId: AffilixWP.wp_user_id,

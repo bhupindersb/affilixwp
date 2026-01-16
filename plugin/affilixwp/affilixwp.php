@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.3.49
+ * Version: 0.3.50
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.3.49');
+define('AFFILIXWP_VERSION', '0.3.50');
 
 /**
  * Load core
@@ -94,14 +94,16 @@ function affilixwp_enqueue_checkout_scripts() {
 
     // 👇 THIS IS CRITICAL
     wp_localize_script(
-        'affilixwp-checkout', // MUST MATCH SCRIPT HANDLE
-        'AffilixWP',          // MUST MATCH JS VARIABLE
+        'affilixwp-checkout',
+        'AffilixWP',
         [
             'wp_user_id'   => get_current_user_id(),
             'api_url'      => rest_url('affilixwp/v1'),
             'razorpay_key' => get_option('affilixwp_razorpay_key'),
+            'nonce'        => wp_create_nonce('wp_rest'),
         ]
     );
+
 }
 add_action('wp_enqueue_scripts', 'affilixwp_enqueue_checkout_scripts');
 

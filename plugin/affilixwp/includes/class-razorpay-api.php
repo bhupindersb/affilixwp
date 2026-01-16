@@ -12,9 +12,13 @@ class AffilixWP_Razorpay_API {
         register_rest_route('affilixwp/v1', '/razorpay/create-subscription', [
             'methods'  => 'POST',
             'callback' => [$this, 'create_subscription'],
-            'permission_callback' => function () {
-                return is_user_logged_in();
+            'permission_callback' => function (WP_REST_Request $request) {
+                return is_user_logged_in() && wp_verify_nonce(
+                    $request->get_header('X-WP-Nonce'),
+                    'wp_rest'
+                );
             }
+
         ]);
     }
 
