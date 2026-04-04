@@ -293,3 +293,29 @@ add_action('admin_init', function () {
     );
 });
 
+add_filter('pre_set_site_transient_update_plugins', function($transient) {
+
+    if (empty($transient->checked)) return $transient;
+
+    $response = wp_remote_get(AFFILIXWP_UPDATE_URL);
+    if (is_wp_error($response)) return $transient;
+
+    $data = json_decode(wp_remote_retrieve_body($response));
+
+    if (version_compare(AFFILIXWP_VERSION, $data->version, '<')) {
+
+        $plugin_slug = 'affilixwp/affilixwp.php';
+
+        $transient->response[$plugin_slug] = (object)[
+            'slug' => 'affilixwp',
+            'new_version' => $data->version,
+            'package' => $data->download_url,
+            'tested' => $data->tested,
+            'requires' => $data->requires
+        ];
+    }
+
+    return $transient;
+
+});
+
