@@ -303,7 +303,13 @@ add_filter('pre_set_site_transient_update_plugins', function($transient) {
 
     $data = json_decode(wp_remote_retrieve_body($response));
 
-    if (version_compare(AFFILIXWP_VERSION, $data->version, '<')) {
+    if (!$data || empty($data->version)) return $transient;
+
+    // 🔥 Get actual plugin version from header
+    $plugin_data = get_plugin_data(__FILE__);
+    $current_version = $plugin_data['Version'];
+
+    if (version_compare($current_version, $data->version, '<')) {
 
         $plugin_slug = 'affilixwp/affilixwp.php';
 
@@ -319,4 +325,3 @@ add_filter('pre_set_site_transient_update_plugins', function($transient) {
     return $transient;
 
 });
-
