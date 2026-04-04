@@ -182,7 +182,7 @@ $ref_url = home_url('/?ref=' . $affiliate->referral_code);
 <div class="affx-dashboard">
 
     <div class="affx-header">
-        <div class="affx-title">Affiliate Dashboard test deployed</div>
+        <div class="affx-title">Affiliate Dashboard test</div>
     </div>
 
     <!-- CARDS -->
