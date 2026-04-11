@@ -43,7 +43,6 @@ $affiliate = $wpdb->get_row(
         $user_id
     )
 );
-);
 
 $ref_url = home_url('/?ref=' . ($affiliate->referral_code ?? ''));
 $logo_url = AFFILIXWP_URL . 'assets/images/logo.png';
