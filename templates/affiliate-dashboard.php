@@ -43,169 +43,32 @@ $affiliate = $wpdb->get_row(
         $user_id
     )
 );
-
+);
 
 $ref_url = home_url('/?ref=' . ($affiliate->referral_code ?? ''));
-$logo_url = AFFILIXWP_URL . 'assets/images/logo-affilixwp.svg';
+$logo_url = AFFILIXWP_URL . 'assets/images/logo.png';
 $current_user = wp_get_current_user();
 ?>
 
 <style>
-.affx-shell {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    min-height: 100vh;
-    background: #f4f7fb;
-    font-family: Inter, sans-serif;
-}
-
-.affx-sidebar {
-    background: #111827;
-    color: #fff;
-    padding: 30px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-}
-
-.affx-brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.affx-brand img {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    object-fit: contain;
-    background: #fff;
-    padding: 6px;
-}
-
-.affx-brand h2 {
-    font-size: 20px;
-    margin: 0;
-}
-
-.affx-menu a {
-    display: block;
-    color: #d1d5db;
-    text-decoration: none;
-    padding: 14px 16px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-}
-
-.affx-menu a.active,
-.affx-menu a:hover {
-    background: rgba(255,255,255,.08);
-    color: #fff;
-}
-
-.affx-main {
-    padding: 40px;
-}
-
-.affx-topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.affx-user {
-    background: #fff;
-    padding: 12px 18px;
-    border-radius: 14px;
-    box-shadow: 0 4px 14px rgba(0,0,0,.05);
-}
-
-.affx-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
-    gap: 24px;
-}
-
-.affx-card {
-    background: #fff;
-    border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.06);
-}
-
-.affx-card h3 {
-    margin: 0;
-    color: #6b7280;
-    font-size: 14px;
-}
-
-.affx-card h2 {
-    font-size: 34px;
-    margin: 10px 0 0;
-}
-
-.affx-section {
-    margin-top: 32px;
-    background: #fff;
-    border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.05);
-}
-
-.affx-ref-box {
-    display: flex;
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.affx-ref-box input {
-    flex: 1;
-    padding: 14px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-}
-
-.affx-copy-btn {
-    background: #4f46e5;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 0 20px;
-    cursor: pointer;
-}
-
-.affx-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.affx-table th,
-.affx-table td {
-    padding: 16px;
-    border-bottom: 1px solid #f1f5f9;
-    text-align: left;
-}
-
-.affx-status {
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-}
-
-.affx-status.pending { background:#FEF3C7; color:#92400E; }
-.affx-status.paid { background:#DBEAFE; color:#1E40AF; }
-.affx-status.approved { background:#DCFCE7; color:#166534; }
-
-@media(max-width: 991px){
-    .affx-shell { grid-template-columns: 1fr; }
-    .affx-sidebar { min-height: auto; }
-    .affx-main { padding: 20px; }
-}
+/* Optional fallback styles if Tailwind is not loaded */
 </style>
 
-<div class="affx-shell">
-    <aside class="affx-sidebar">
+<?php
+/**
+ * To remove header/footer only on dashboard page:
+ * 1. Create a WP page template (template-affiliate-dashboard.php)
+ * 2. Omit get_header() / get_footer() in that template
+ * 3. Render do_shortcode('[affilixwp_dashboard]') inside it
+ *
+ * Tailwind note:
+ * Enqueue Tailwind CSS only on dashboard page via wp_enqueue_style,
+ * or compile plugin-specific dashboard.css using Tailwind.
+ */
+?>
+
+<div class="min-h-screen bg-slate-50 grid lg:grid-cols-[280px_1fr] affx-shell">
+    <aside class="bg-slate-900 text-white p-8 flex flex-col gap-8 affx-sidebar">
         <div class="affx-brand">
             <img src="<?php echo esc_url($logo_url); ?>" alt="AffilixWP Logo">
             <div>
@@ -215,13 +78,13 @@ $current_user = wp_get_current_user();
         </div>
 
         <nav class="affx-menu">
-            <a href="#" class="active">Affiliate Dashboard</a>
+            <a href="#" class="active">Dashboard</a>
             <a href="#referral">Referral Link</a>
             <a href="#history">Commission History</a>
         </nav>
     </aside>
 
-    <main class="affx-main">
+    <main class="p-6 lg:p-10 affx-main">
         <div class="affx-topbar">
             <div>
                 <h1>Welcome back, <?php echo esc_html($current_user->display_name); ?></h1>
