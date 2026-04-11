@@ -215,7 +215,7 @@ $current_user = wp_get_current_user();
         </div>
 
         <nav class="affx-menu">
-            <a href="#" class="active">Dashboard</a>
+            <a href="#" class="active">Affiliate Dashboard</a>
             <a href="#referral">Referral Link</a>
             <a href="#history">Commission History</a>
         </nav>
