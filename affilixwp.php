@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.3.75
+ * Version: 0.3.76
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.3.75');
+define('AFFILIXWP_VERSION', '0.3.76');
 define('AFFILIXWP_UPDATE_URL', 'https://affilixwp.beveez.tech/update.json');
 define('FS_METHOD', 'direct');
 
@@ -374,6 +374,13 @@ function affilixwp_dashboard_assets() {
     ) {
 
         wp_enqueue_style(
+            'tailwind-cdn',
+            'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css',
+            [],
+            null
+        );
+
+        wp_enqueue_style(
             'affilixwp-dashboard',
             AFFILIXWP_URL . 'assets/css/dashboard.css',
             [],
@@ -402,9 +409,3 @@ add_filter('template_include', function($template) {
     return $template;
 });
 
-wp_enqueue_style(
-    'tailwind-cdn',
-    'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css',
-    [],
-    null
-);
