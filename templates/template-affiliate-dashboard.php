@@ -10,4 +10,7 @@ if (!is_user_logged_in()) {
     exit;
 }
 
+// Optional: hide admin bar
+show_admin_bar(false);
+
 echo do_shortcode('[affilixwp_dashboard]');

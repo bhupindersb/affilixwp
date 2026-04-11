@@ -45,7 +45,7 @@ $affiliate = $wpdb->get_row(
 );
 
 $ref_url = home_url('/?ref=' . ($affiliate->referral_code ?? ''));
-$logo_url = AFFILIXWP_URL . 'assets/images/logo.png';
+$logo_url = AFFILIXWP_URL . 'assets/images/logo-affilixwp.svg';
 $current_user = wp_get_current_user();
 ?>
 

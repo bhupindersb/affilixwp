@@ -1,0 +1,17 @@
+body {
+    margin: 0 !important;
+    background: #f8fafc !important;
+    font-family: sans-serif;
+}
+
+.affx-shell {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 100vh;
+}
+
+@media(max-width:991px){
+    .affx-shell {
+        grid-template-columns: 1fr;
+    }
+}
