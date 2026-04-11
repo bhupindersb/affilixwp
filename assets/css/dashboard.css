@@ -1,4 +1,8 @@
 /* Dashboard Layout */
+html {
+    margin-top: 0px !important;
+}
+
 body.affilixwp-dashboard-page {
     margin: 0;
     background: #f8fafc;
