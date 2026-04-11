@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AffilixWP
  * Description: Affiliate & multi-level commission tracking for WordPress.
- * Version: 0.3.78
+ * Version: 0.3.79
  * Author: AffilixWP
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
-define('AFFILIXWP_VERSION', '0.3.78');
+define('AFFILIXWP_VERSION', '0.3.79');
 define('AFFILIXWP_UPDATE_URL', 'https://affilixwp.beveez.tech/update.json');
 define('FS_METHOD', 'direct');
 
@@ -358,17 +358,9 @@ add_action('admin_init', function() {
 });
 
 
-add_action('wp_enqueue_scripts', 'affilixwp_dashboard_assets');
+add_action('wp_enqueue_scripts', function () {
 
-function affilixwp_dashboard_assets() {
-
-    global $post;
-
-    if (
-        is_user_logged_in() &&
-        is_a($post, 'WP_Post') &&
-        has_shortcode($post->post_content, 'affilixwp_dashboard')
-    ) {
+    if (is_page_template('template-affiliate-dashboard.php')) {
 
         wp_enqueue_style(
             'tailwind-cdn',
@@ -383,8 +375,16 @@ function affilixwp_dashboard_assets() {
             [],
             AFFILIXWP_VERSION
         );
+
+        wp_enqueue_script(
+            'affilixwp-dashboard',
+            AFFILIXWP_URL . 'assets/js/dashboard.js',
+            [],
+            AFFILIXWP_VERSION,
+            true
+        );
     }
-}
+});
 
 add_filter('theme_page_templates', function($templates) {
     $templates['template-affiliate-dashboard.php'] = 'Affiliate Dashboard';

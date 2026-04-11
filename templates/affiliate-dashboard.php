@@ -69,7 +69,7 @@ $current_user = wp_get_current_user();
 <div class="min-h-screen bg-slate-50 grid lg:grid-cols-[280px_1fr] affx-shell">
     <aside class="bg-slate-900 text-white p-8 flex flex-col gap-8 affx-sidebar">
         <div class="affx-brand">
-            <img src="<?php echo esc_url($logo_url); ?>" alt="AffilixWP Logo">
+            <img src="<?php echo esc_url($logo_url); ?>" class="max-w-[180px]" alt="AffilixWP Logo">
             <div>
                 <h2>AffilixWP</h2>
                 <small>Affiliate Panel</small>
