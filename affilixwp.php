@@ -24,7 +24,6 @@ require_once AFFILIXWP_PATH . 'includes/class-affiliates.php';
 require_once AFFILIXWP_PATH . 'includes/class-referral-tracker.php';
 require_once AFFILIXWP_PATH . 'includes/class-commission-api.php';
 require_once AFFILIXWP_PATH . 'includes/class-commission-engine.php';
-require_once AFFILIXWP_PATH . 'includes/class-stripe-webhook.php';
 require_once AFFILIXWP_PATH . 'includes/class-metrics.php';
 require_once AFFILIXWP_PATH . 'includes/class-affiliate-dashboard.php';
 require_once AFFILIXWP_PATH . 'includes/class-commission-cron.php';
@@ -58,7 +57,6 @@ add_action('plugins_loaded', function () {
     new AffilixWP_Affiliates();
     new AffilixWP_Referral_Tracker();
     new AffilixWP_Commission_API();
-    new AffilixWP_Stripe_Webhook();
     new AffilixWP_Affiliate_Dashboard();
     new AffilixWP_Razorpay_API();
     new AffilixWP_Razorpay_Webhook();
