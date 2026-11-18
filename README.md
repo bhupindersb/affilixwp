@@ -4,7 +4,7 @@ Affiliate & multi-level commission tracking for WordPress.
 
 ## Features
 - Level 1 & Level 2 referrals
-- Stripe-ready commission tracking
+- Razorpay-based payment workflow and commission tracking
 - Custom database tables
 - Built for performance
 
