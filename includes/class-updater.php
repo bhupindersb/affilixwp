@@ -17,7 +17,7 @@ class AffilixWP_Updater {
 
         $this->version     = AFFILIXWP_VERSION;
         $this->license_key = get_option('affilixwp_license_key');
-        $this->api_url     = 'https://www.beveez.tech/api/update/check';
+        $this->api_url     = 'https://affilixwp.beveeztech.com/api/update/check';
 
         add_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_update']);
         add_filter('plugins_api', [$this, 'plugin_info'], 10, 3);
@@ -78,7 +78,7 @@ class AffilixWP_Updater {
             'slug'     => 'affilixwp',
             'version'  => $this->version,
             'author'   => 'AffilixWP',
-            'homepage' => 'https://www.beveez.tech/affilixwp',
+            'homepage' => 'https://affilixwp.beveeztech.com',
             'sections' => [
                 'description' => 'Affiliate & multi-level commission tracking for WordPress.',
             ],

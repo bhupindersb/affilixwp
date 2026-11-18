@@ -23,7 +23,7 @@ class AffilixWP_License_Validator {
         }
 
         $response = wp_remote_post(
-            'https://www.beveez.tech/api/license/validate',
+            'https://affilixwp.beveeztech.com/api/license/validate',
             [
                 'timeout' => 15,
                 'headers' => ['Content-Type' => 'application/json'],
