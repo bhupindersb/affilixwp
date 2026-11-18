@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*.*.*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,19 +16,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set version variable
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Prepare build directory
+      - name: Prepare plugin directory
         run: |
-          mkdir build
-          cp -R plugin/affilixwp build/affilixwp
+          mkdir -p build/affilixwp
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='build' \
+            --exclude='.gitignore' \
+            ./ build/affilixwp/
+          test -f build/affilixwp/affilixwp.php
 
       - name: Create plugin ZIP
         run: |
           cd build
           zip -r affilixwp.zip affilixwp
-
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -33,4 +38,3 @@ jobs:
           files: build/affilixwp.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
