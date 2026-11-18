@@ -11,7 +11,6 @@ if (!defined('ABSPATH')) exit;
 define('AFFILIXWP_PATH', plugin_dir_path(__FILE__));
 define('AFFILIXWP_URL', plugin_dir_url(__FILE__));
 define('AFFILIXWP_VERSION', '0.3.83');
-define('AFFILIXWP_UPDATE_URL', 'https://affilixwp.beveez.tech/update.json');
 define('FS_METHOD', 'direct');
 
 /**
@@ -293,70 +292,6 @@ add_action('admin_init', function () {
         ]
     );
 });
-
-add_filter('pre_set_site_transient_update_plugins', function($transient) {
-
-    if (empty($transient->checked)) return $transient;
-
-    // 🔥 DEBUG: confirm hook runs
-    error_log('AffilixWP update check running');
-
-    $response = wp_remote_get(AFFILIXWP_UPDATE_URL);
-
-    if (is_wp_error($response)) {
-        error_log('Update API error: ' . $response->get_error_message());
-        return $transient;
-    }
-
-    $body = wp_remote_retrieve_body($response);
-
-    // 🔥 DEBUG: log API response
-    error_log('Update JSON response: ' . $body);
-
-    $data = json_decode($body);
-
-    if (!$data || empty($data->version)) {
-        error_log('Invalid update JSON');
-        return $transient;
-    }
-
-    // 🔥 Get plugin version from header (correct way)
-    if (!function_exists('get_plugin_data')) {
-        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-
-    $plugin_data = get_plugin_data(__FILE__);
-    $current_version = $plugin_data['Version'];
-
-    error_log('Current version: ' . $current_version);
-    error_log('Remote version: ' . $data->version);
-
-    if (version_compare($current_version, $data->version, '<')) {
-
-        $plugin_slug = 'affilixwp/affilixwp.php';
-
-        $transient->response[$plugin_slug] = (object)[
-            'slug' => 'affilixwp',
-            'new_version' => $data->version,
-            'package' => $data->download_url,
-            'tested' => $data->tested ?? '',
-            'requires' => $data->requires ?? ''
-        ];
-
-        error_log('Update available!');
-    } else {
-        error_log('No update needed.');
-    }
-
-    return $transient;
-
-});
-
-
-add_action('admin_init', function() {
-    delete_site_transient('update_plugins');
-});
-
 
 add_action('wp_enqueue_scripts', function () {
 
