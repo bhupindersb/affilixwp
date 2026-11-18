@@ -4,7 +4,10 @@
     "title": "AffilixWP Interactive Demo",
     "description": "A temporary WordPress Playground for testing the AffilixWP plugin. Uses sample-only data and no live payment credentials.",
     "author": "AffilixWP",
-    "categories": ["plugin-demo", "affiliate-marketing"]
+    "categories": [
+      "plugin-demo",
+      "affiliate-marketing"
+    ]
   },
   "landingPage": "/wp-admin/admin.php?page=affilixwp",
   "preferredVersions": {
@@ -27,7 +30,8 @@
         "url": "https://codeload.github.com/bhupindersb/affilixwp/zip/refs/heads/fix/database-referrals-razorpay-lifecycle"
       },
       "options": {
-        "activate": true
+        "activate": true,
+        "targetFolderName": "affilixwp"
       }
     }
   ]
