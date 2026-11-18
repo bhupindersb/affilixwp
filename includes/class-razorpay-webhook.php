@@ -84,7 +84,8 @@ class AffilixWP_Razorpay_Webhook {
                         sanitize_text_field($subscription['id']),
                         absint($subscription['current_start'] ?? time())
                     );
-                    $amount_paise = absint($subscription['plan']['item']['amount'] ?? $subscription['plan']['amount'] ?? 0);
+                    $payment = $event['payload']['payment']['entity'] ?? [];
+                    $amount_paise = absint($payment['amount'] ?? $subscription['plan']['item']['amount'] ?? $subscription['plan']['amount'] ?? 0);
                     $amount = $amount_paise / 100;
 
                     if ($amount > 0) {
