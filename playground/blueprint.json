@@ -24,7 +24,7 @@
       "step": "installPlugin",
       "pluginData": {
         "resource": "url",
-        "url": "https://codeload.github.com/bhupindersb/affilixwp/zip/refs/heads/main"
+        "url": "https://codeload.github.com/bhupindersb/affilixwp/zip/refs/heads/fix/database-referrals-razorpay-lifecycle"
       },
       "options": {
         "activate": true
