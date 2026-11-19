@@ -2,12 +2,12 @@
 
 /* Full-width dashboard page: suppress the theme's duplicate page heading
    and reduce the block theme's top content spacing only on this page. */
-body:has(.affx-shell){overflow-x:clip}
+html:has(.affx-shell),body:has(.affx-shell){overflow-x:hidden!important}
 body:has(.affx-shell) .wp-block-post-title,
 body:has(.affx-shell) .entry-title{display:none!important}
 body:has(.affx-shell) .wp-site-blocks>main{margin-block-start:0!important;padding-block-start:24px!important}
 
-.affx-shell{--ink:#172033;--muted:#718096;--line:#e8edf4;display:grid;grid-template-columns:264px minmax(0,1fr);width:min(1440px,calc(100vw - 40px));max-width:none!important;margin:36px 0 36px calc(50% - min(720px,50vw - 20px));min-height:760px;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:#f6f8fc;color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 18px 55px rgba(22,34,60,.08);box-sizing:border-box}
+.affx-shell{--ink:#172033;--muted:#718096;--line:#e8edf4;display:grid;grid-template-columns:264px minmax(0,1fr);width:min(1440px,calc(100vw - 40px));max-width:none!important;position:relative;left:50%;transform:translateX(-50%);margin:36px 0;min-height:760px;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:#f6f8fc;color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 18px 55px rgba(22,34,60,.08);box-sizing:border-box}
 .affx-shell *,.affx-shell *:before,.affx-shell *:after{box-sizing:border-box}
 .affx-shell h1,.affx-shell h2,.affx-shell h3,.affx-shell p{margin-top:0}
 .affx-sidebar{display:flex;flex-direction:column;gap:30px;padding:30px 20px;background:#111a35;color:#fff}
@@ -38,7 +38,7 @@ body:has(.affx-shell) .wp-site-blocks>main{margin-block-start:0!important;paddin
 .affx-panel-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:17px}
 .affx-panel-head h3,.affx-panel>h3{margin:0;color:#202b42;font-size:17px;font-weight:750}
 .affx-panel-head p{margin:5px 0 0;color:var(--muted);font-size:12px}
-.affx-chart-panel canvas{display:block;width:100%;min-height:170px}
+.affx-chart-panel canvas{display:block;width:100%;height:120px;max-height:120px}
 .affx-progress-panel{display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
 .affx-progress-panel>h3{align-self:flex-start}
 .affx-progress-circle{position:relative;display:grid;place-items:center;width:150px;height:150px;margin:24px auto 5px;border-radius:50%;background:conic-gradient(#5a4bd6 0 84%,#e9edf6 84% 100%)}
