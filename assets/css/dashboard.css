@@ -1,4 +1,12 @@
 /* AffilixWP frontend affiliate dashboard */
+
+/* Full-width dashboard page: suppress the theme's duplicate page heading
+   and reduce the block theme's top content spacing only on this page. */
+body:has(.affx-shell){overflow-x:clip}
+body:has(.affx-shell) .wp-block-post-title,
+body:has(.affx-shell) .entry-title{display:none!important}
+body:has(.affx-shell) .wp-site-blocks>main{margin-block-start:0!important;padding-block-start:24px!important}
+
 .affx-shell{--ink:#172033;--muted:#718096;--line:#e8edf4;display:grid;grid-template-columns:264px minmax(0,1fr);width:min(1440px,calc(100vw - 40px));max-width:none!important;margin:36px 0 36px calc(50% - min(720px,50vw - 20px));min-height:760px;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:#f6f8fc;color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 18px 55px rgba(22,34,60,.08);box-sizing:border-box}
 .affx-shell *,.affx-shell *:before,.affx-shell *:after{box-sizing:border-box}
 .affx-shell h1,.affx-shell h2,.affx-shell h3,.affx-shell p{margin-top:0}
