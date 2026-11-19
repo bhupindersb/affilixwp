@@ -42,7 +42,6 @@ if (is_admin()) {
     require_once AFFILIXWP_PATH . 'admin/class-razorpay-settings.php';
 }
 
-
 /**
  * Activation
  */
@@ -52,7 +51,6 @@ register_activation_hook(__FILE__, ['AffilixWP_Activator', 'activate']);
  * Boot
  */
 add_action('plugins_loaded', function () {
-
     AffilixWP_Activator::maybe_upgrade();
 
     new AffilixWP_Affiliates();
@@ -68,7 +66,6 @@ add_action('plugins_loaded', function () {
         new AffilixWP_Updater(__FILE__);
         AffilixWP_Razorpay_Settings::init();
     }
-
 });
 
 /**
@@ -81,9 +78,10 @@ add_action('admin_init', function () {
     }
 });
 
+/**
+ * Load checkout assets and provide the REST nonce to checkout.js.
+ */
 function affilixwp_enqueue_checkout_scripts() {
-
-    // Razorpay Checkout
     wp_enqueue_script(
         'razorpay-checkout',
         'https://checkout.razorpay.com/v1/checkout.js',
@@ -92,16 +90,14 @@ function affilixwp_enqueue_checkout_scripts() {
         true
     );
 
-    // Your checkout.js
     wp_enqueue_script(
         'affilixwp-checkout',
-        plugin_dir_url(__FILE__) . 'assets/js/checkout.js',
+        AFFILIXWP_URL . 'assets/js/checkout.js',
         ['razorpay-checkout'],
-        '1.0',
+        AFFILIXWP_VERSION,
         true
     );
 
-    // 👇 THIS IS CRITICAL
     wp_localize_script(
         'affilixwp-checkout',
         'AffilixWP',
@@ -112,13 +108,13 @@ function affilixwp_enqueue_checkout_scripts() {
             'nonce'        => wp_create_nonce('wp_rest'),
         ]
     );
-
 }
 add_action('wp_enqueue_scripts', 'affilixwp_enqueue_checkout_scripts');
 
-
-
-add_action('admin_enqueue_scripts', function () { 
+/**
+ * Chart.js is used by the admin dashboard.
+ */
+add_action('admin_enqueue_scripts', function () {
     wp_enqueue_script(
         'chartjs',
         'https://cdn.jsdelivr.net/npm/chart.js',
@@ -131,24 +127,20 @@ add_action('admin_enqueue_scripts', function () {
 add_action('admin_post_affilixwp_export_commissions', 'affilixwp_export_commissions_csv');
 
 function affilixwp_export_commissions_csv() {
-
     if (!current_user_can('manage_options')) {
         wp_die('Unauthorized');
     }
 
     global $wpdb;
     $table = $wpdb->prefix . 'affilixwp_commissions';
-
     $where = "status = 'pending'";
 
     if (!empty($_GET['from'])) {
         $where .= $wpdb->prepare(" AND created_at >= %s", $_GET['from']);
     }
-
     if (!empty($_GET['to'])) {
         $where .= $wpdb->prepare(" AND created_at <= %s", $_GET['to'] . ' 23:59:59');
     }
-
     if (!empty($_GET['affiliate'])) {
         $where .= $wpdb->prepare(" AND referrer_user_id = %d", (int) $_GET['affiliate']);
     }
@@ -169,15 +161,7 @@ function affilixwp_export_commissions_csv() {
     header('Content-Disposition: attachment; filename=affilixwp-commissions.csv');
 
     $out = fopen('php://output', 'w');
-
-    fputcsv($out, [
-        'Date',
-        'Affiliate ID',
-        'Buyer ID',
-        'Order Amount',
-        'Commission',
-        'Status'
-    ]);
+    fputcsv($out, ['Date', 'Affiliate ID', 'Buyer ID', 'Order Amount', 'Commission', 'Status']);
 
     foreach ($rows as $r) {
         fputcsv($out, [
@@ -194,7 +178,6 @@ function affilixwp_export_commissions_csv() {
     exit;
 }
 
-
 AffilixWP_Commission_Cron::init();
 
 if (!wp_next_scheduled('affilixwp_daily_cron')) {
@@ -202,7 +185,6 @@ if (!wp_next_scheduled('affilixwp_daily_cron')) {
 }
 
 AffilixWP_Dashboard_Actions::init();
-
 AffilixWP_Affiliate_Payout_Profile::init();
 
 add_shortcode('affilixwp_dashboard', ['AffilixWP_Affiliate_Frontend', 'shortcode']);
@@ -210,7 +192,6 @@ add_shortcode('affilixwp_dashboard', ['AffilixWP_Affiliate_Frontend', 'shortcode
 add_action('admin_post_affilixwp_export_payouts', 'affilixwp_export_payouts_csv');
 
 function affilixwp_export_payouts_csv() {
-
     if (!current_user_can('manage_options')) {
         wp_die('Unauthorized');
     }
@@ -220,7 +201,6 @@ function affilixwp_export_payouts_csv() {
     global $wpdb;
     $table = $wpdb->prefix . 'affilixwp_commissions';
 
-    // Group approved commissions by affiliate
     $rows = $wpdb->get_results("
         SELECT
             referrer_user_id,
@@ -239,23 +219,16 @@ function affilixwp_export_payouts_csv() {
     header('Expires: 0');
 
     $output = fopen('php://output', 'w');
-
-    fputcsv($output, [
-        'Affiliate ID',
-        'Affiliate Name',
-        'Total Commission',
-        'Commission IDs'
-    ]);
+    fputcsv($output, ['Affiliate ID', 'Affiliate Name', 'Total Commission', 'Commission IDs']);
 
     foreach ($rows as $row) {
-
-        $user = get_user_by('id', (int)$row->referrer_user_id);
+        $user = get_user_by('id', (int) $row->referrer_user_id);
         $name = $user ? $user->display_name : 'User #' . $row->referrer_user_id;
 
         fputcsv($output, [
             $row->referrer_user_id,
             $name,
-            number_format((float)$row->total_commission, 2, '.', ''),
+            number_format((float) $row->total_commission, 2, '.', ''),
             $row->commission_ids
         ]);
     }
@@ -265,10 +238,9 @@ function affilixwp_export_payouts_csv() {
 }
 
 /**
- * Schedule daily payouts
+ * Schedule daily payouts.
  */
 add_action('plugins_loaded', function () {
-
     AffilixWP_Commission_Cron::init();
 
     if (!wp_next_scheduled('affilixwp_daily_payouts')) {
@@ -281,7 +253,6 @@ register_deactivation_hook(__FILE__, function () {
 });
 
 add_action('admin_init', function () {
-
     register_setting(
         'affilixwp_settings',
         'affilixwp_min_payout',
@@ -293,40 +264,49 @@ add_action('admin_init', function () {
     );
 });
 
+/**
+ * Enqueue the affiliate dashboard assets on either:
+ * - a page using the dedicated plugin template, or
+ * - a normal page containing the [affilixwp_dashboard] shortcode.
+ *
+ * The shortcode is commonly used with block themes, where the PHP page
+ * template selector is not available in the editor.
+ */
 add_action('wp_enqueue_scripts', function () {
+    $is_dashboard_template = is_page_template('template-affiliate-dashboard.php');
+    $has_dashboard_shortcode = false;
 
-    if (is_page_template('template-affiliate-dashboard.php')) {
-
-        wp_enqueue_style(
-            'tailwind-cdn',
-            'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css',
-            [],
-            null
-        );
-
-        wp_enqueue_style(
-            'affilixwp-dashboard',
-            AFFILIXWP_URL . 'assets/css/dashboard.css',
-            [],
-            AFFILIXWP_VERSION
-        );
-
-        wp_enqueue_script(
-            'affilixwp-dashboard',
-            AFFILIXWP_URL . 'assets/js/dashboard.js',
-            [],
-            AFFILIXWP_VERSION,
-            true
-        );
+    if (is_singular()) {
+        $post = get_queried_object();
+        if ($post instanceof WP_Post) {
+            $has_dashboard_shortcode = has_shortcode(
+                $post->post_content,
+                'affilixwp_dashboard'
+            );
+        }
     }
+
+    if (!$is_dashboard_template && !$has_dashboard_shortcode) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'affilixwp-dashboard',
+        AFFILIXWP_URL . 'assets/css/dashboard.css',
+        [],
+        AFFILIXWP_VERSION
+    );
 });
 
-add_filter('theme_page_templates', function($templates) {
+/**
+ * Register the optional classic-theme page template.
+ */
+add_filter('theme_page_templates', function ($templates) {
     $templates['template-affiliate-dashboard.php'] = 'Affiliate Dashboard';
     return $templates;
 });
 
-add_filter('template_include', function($template) {
+add_filter('template_include', function ($template) {
     if (is_page_template('template-affiliate-dashboard.php')) {
         return AFFILIXWP_PATH . 'templates/template-affiliate-dashboard.php';
     }
